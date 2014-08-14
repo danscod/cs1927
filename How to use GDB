@@ -1,0 +1,16 @@
+How to use GDB
+
+compile program with flag -g
+e.g. alter the Makefile
+
+gdb ./program
+
+IGNORE CRAP UNTIL...
+
+(gdb) //Waiting for your command...
+
+(gdb) run //Program will now run
+
+(gdb) print current //current is a variable, value of such can now be printed
+
+(gdb) backtrace //shows which functions have been run
