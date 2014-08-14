@@ -92,58 +92,45 @@ void IntListInsert(IntList L, int v)
 // insert an integer into correct place in a sorted list
 void IntListInsertInOrder(IntList L, int v)
 {
-	// This is INCORRECT
-	//Begin Dan and Daniel's Code
-
-	assert(L != NULL);
-	struct IntListNode *bob;
-
-	//Check if list is empty (put at start) or value is >= last (put at end)
-	if (L->size == 0) {
-		IntListInsert(L, v);
-		return;
-	} else if (L->size == 1) {
-		if (v <= L->first->data) {
-			struct IntListNode *newNode;
-			newNode = newIntListNode(v);
-			newNode->next = L->first;
-			L->first = newNode;
-			L->size++;
-			return;
-		} else {
-			IntListInsert(L, v);
-		}
-	} else if (L->last->data <= v) {
-		IntListInsert(L, v);
-		return;
-	}
-
-	//Move through list to find correct place
-	bob = L->first;
-	if (bob->data <= v) {
-		struct IntListNode *newNode;
-		newNode = newIntListNode(v);
-		newNode->next = L->first;			
-		L->first = newNode;
-		L->size++;
-		return;
-	}
-	while (bob->next != NULL && bob->next->data <= v) {
-		bob = bob->next;
-	}
-
-	//Manually insert the new node
-	struct IntListNode *newNode;
-	newNode = newIntListNode(v);
-	newNode->next = bob->next;
-	bob->next = newNode;
-
-	//Increment size
-	L->size++;
-
-	return;
-
+   assert(L != NULL);
+   if (L->size == 0){
+      IntListInsert(L, v);
+      return;
+   }
+   if (L->size == 1){
+      if (v >= L->first->data){
+         IntListInsert(L, v);
+      } else {
+         struct IntListNode *n;
+         n = newIntListNode(v);
+         n->next = L->first;
+         L->first = n;
+         L->size++;
+      }
+      return;
+   }
+   struct IntListNode *n;
+   struct IntListNode *i;
+   n = newIntListNode(v);
+   i = L->first;
+   if (v < i->data){
+      n->next = i;
+      L->first = n;
+      L->size++;
+      return;
+   }
+   while (i->next != NULL && v > i->next->data){
+      i = i->next;
+   }
+   if (i->next == NULL){
+      L->last = n;
+   }
+   n->next = i->next;
+   i->next = n;
+   L->size++;
+   return;
 }
+
 
 // delete first occurrence of v from a list
 // if v does not occur in List, no effect

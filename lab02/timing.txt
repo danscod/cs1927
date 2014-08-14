@@ -1,0 +1,6 @@
+Random order
+
+size    runs  average uil  average sort
+ 20000   5     0.61         0.01
+ 50000   5     5.79         0.03
+ 80000   5    17.01         0.04
