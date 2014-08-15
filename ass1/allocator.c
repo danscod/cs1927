@@ -37,7 +37,26 @@ static vsize_t memory_size;   // number of bytes malloc'd in memory[]
 
 void sal_init(u_int32_t size)
 {
-   // TODO
+   //find size in the form 2^n
+   u_int32_t n = 8;
+   while (n < size){
+      n = n * 2;
+   }
+   //set global variables
+   memory = malloc(n);
+   //check if malloc worked properly
+   if (memory == NULL){
+      fprintf(stderr, "sal_init: insufficient memory");
+      abort();
+   }
+   free_list_ptr = 0;
+   memory_size = n;
+   //set first free list pointer
+   free_header_t *list1 = (free_header_t *)memory;
+   list1->magic = MAGIC_FREE;
+   list1->size = n;
+   list1->next = list1;
+   list1->prev = list1;
 }
 
 void *sal_malloc(u_int32_t n)
