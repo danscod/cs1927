@@ -34,57 +34,100 @@ static byte *memory = NULL;   // pointer to start of suballocator memory
 static vaddr_t free_list_ptr; // index in memory[] of first block in free list
 static vsize_t memory_size;   // number of bytes malloc'd in memory[]
 
+//Function Prototypes
+u_int32_t sizeToN(u_int32_t n);
+vlink_t memoryDivide (vlink_t curr);
+vlink_t enslaveRegion (vlink_t curr);
+
 //Initialise the suballocator, and malloc memory for it
 void sal_init(u_int32_t size) {
 
-    //Check if already initialised
+    //Check if already initialised, do nothing if so
     if (memory != NULL) {
         return;
     }
 
-                                                                                    /*      This will overshoot wildy for any moderately large value of size
-                                                                                    //find size which is a power of two
-                                                                                    u_int32_t n = 8;
-                                                                                    while (n < size) {
-                                                                                        n = n * 2;
-                                                                                    }
-                                                                                    */
-
-
-    //round size to the nearest upper power of two, unless already power of two
-    u_int32_t n = 1;
-    if ((size != 0) && (size & (size-1)) == 0) {
-        n = size;
-        break;
-    } else {
-        while (n < size) {
-        n = 2 * n;
-    }
+    //Round size to n
+    u_int32_t n = sizeToN(size);
 
     //set global variables | initialise suballocator
-    memory = malloc(n); 
+    memory = malloc(n);         //May need (byte *) before malloc(), note the static type
 
     //check if malloc worked properly
     if (memory == NULL){
        fprintf(stderr, "sal_init: insufficient memory");
        abort();
     }
+
+    //DANIEL NEED A COMMENT HERE TO EXPLAIN
     free_list_ptr = 0;
     memory_size = n;
 
     //set first free list pointer
-    free_header_t *T = (free_header_t *)memory;                                     //What's this line doing?
+    free_header_t *T = (free_header_t *)memory;                                  
     T->magic = MAGIC_FREE;
     T->size = n;
-    T->next = T;                                                                    //I've changed it to T to match the convention in lab03's list.c also, more condensed.
+    T->next = T;                                                                
     T->prev = T;
 }
 
 //Malloc for the program above but using the suballocated region instead
 void *sal_malloc(u_int32_t n) {
-    // TODO
-    return NULL; // temporarily
+
+    //Use the idea of current node to make conceptualising easier
+    vlink_t curr = free_list_ptr;
+
+    //Round n to nearest upper power of two, including the header
+    u_int32_t n = sizeToN(n + HEADER_SIZE);
+
+    //Scan through list looking for region of size n
+    int passCount = 0;      //Makes the while loop work the first time free_list_ptr is passed (i.e. the beginning of search)
+    int regionFound = 0;    //Boolean variable to identify if a suitable region has been found
+    while (regionFound == 0) {
+        //Ensure that loop will halt next time it reaches start
+        if (curr == free_list_ptr && passCount != 0) {
+            return NULL;
+        }     
+
+        //Print error message if region accessed has already been allocated (and should therefore have been removed from free list);
+        if (curr->magic == MAGIC_ALLOC) {
+            fprintf(stderr, "Memory corruption");
+            abort();
+        }
+
+        //Special case for undivided memory
+        if (curr->next == curr) {
+            //Check if suballocator is large enough
+            if (curr->size >= n) {
+                regionFound = 1;
+            } else {
+                //Meaning that suballocator isn't big enough?
+                return NULL;
+            }
+        //Case if region is sufficiently large    
+        } else if (curr->size >= n) {
+            regionFound = 1;
+        //Case if region is not large enough
+        } else {
+            curr = curr->next;
+        }
+
+        //Increment passCount
+        passCount++;
+    }
+
+    //Divide segment of memory into smallest possible size
+    while (curr->size >= n + HEADER_SIZE) {
+        curr = memoryDivide(vlink_t curr);
+    }
+
+    //Remove region from the free list
+    curr = vlink_t enslaveRegion (vlink_t curr);
+
+    //Return pointer to the first byte AFTER the region header
+    return ((void*)(curr + HEADER_SIZE));
 }
+
 
 //Free all memory associated with suballocator
 void sal_free(void *object) {
@@ -93,7 +136,12 @@ void sal_free(void *object) {
 
 //Terminate the suballocator - must sal_init to use again
 void sal_end(void) {
-    // TODO
+
+    //Free all global variables, which makes accessing the (now deleted) suballocator impossible
+    free(memory);
+    free(free_list_ptr);
+    free(memory_size);
+
 }
 
 //Print all statistics regarding suballocator
@@ -111,3 +159,64 @@ void sal_stats(void) {
     free_list_ptr = free_list_ptr;
     memory_size = memory_size;
 }
+
+//New Functions
+
+//Functions for sal_init and sal_malloc
+//Return usable size from given n value
+u_int32_t sizeToN(u_int32_t size) {
+
+    //round size to the nearest upper power of two, unless already power of two
+    if ((size != 0) && (size & (size-1)) == 0) {
+        n = size;
+        break;
+    } else {
+        n = 1;
+        while (n < size) {
+            //This isn't very efficient, but works for time being
+            n = 2 * n;
+    }
+
+    return n;
+}
+
+//Functions for sal_malloc
+//Splits the region of memory passed in into two
+vlink_t memoryDivide(vlink_t curr) {
+
+    //Extract temporary void pointer from curr (for arithmetic) 
+    (void*) temp = (void*)(curr);
+
+    //Progress temp to the new divided region
+    temp = temp + (current->size)/2;
+
+    //Setup the new region header
+    vlink_t new = temp;
+    new->size = curr->size/2;
+    new->magic = MAGIC_FREE;
+
+    //Shrink the old region
+    curr->size = (curr->size)/2;
+
+    //Link the new regions to the old ones (and vice versa)
+    curr->next->prev = new;
+    new->next = curr->next;     
+    //Now new points to the old curr->next and vice versa
+    curr->next = new;
+    new->prev = curr;           
+    //Now curr points to new and vice versa
+
+    return curr;
+}
+
+//Converts a region from free to allocated, and removes it from the free list
+vlink_t enslaveRegion(vlink_t curr) {
+
+    //Mark header as allocated
+    curr->magic = MAGIC_ALLOC;
+    //Change all links to point to self
+    curr->prev->next = curr->next;
+    curr->next->prev = curr->prev;
+
+    return curr;
+} 
