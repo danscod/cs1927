@@ -9,7 +9,7 @@ typedef struct QueueNode *Link;
 
 struct QueueNode { 
    Item item; 
-   Link next; 
+   Link next;
 };
 
 struct QueueRep { 
@@ -60,8 +60,10 @@ void enterQueue (Queue q, Item it)
    assert(q != NULL);
    Link n = createNode(it);
    if (q->head == NULL) {
-      q->head = n; 
+      q->head = n;
+      q->tail = n;
    }
+   q->tail->next = n;
    q->tail = n;
    q->size++;
 }
@@ -70,6 +72,7 @@ void enterQueue (Queue q, Item it)
 Item leaveQueue (Queue q)
 {
    assert(q != NULL);
+   assert(q->size > 0);
    Item it = q->head->item;
    Link delNode = q->head; 
    q->head = q->head->next;

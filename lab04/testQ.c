@@ -31,7 +31,7 @@ int main (int argc, char *argv[])
       assert(queueLength(q1) == i);
    }
    printf("Final q1: ");showQueue(q1);
-   printf("Final q2: ");showQueue(q1);
+   printf("Final q2: ");showQueue(q2);
    printf("Passed\n");
 
    printf("Test 3: Remove from queues\n");
