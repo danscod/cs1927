@@ -51,7 +51,7 @@ void sal_init(u_int32_t size) {
     u_int32_t n = sizeToN(size);
 
     //set global variables | initialise suballocator
-    memory = malloc(n);         //May need (byte *) before malloc(), note the static type
+    memory = malloc(n);         
 
     //check if malloc worked properly
     if (memory == NULL){
@@ -72,7 +72,6 @@ void sal_init(u_int32_t size) {
 }
 
 //Malloc for the program above but using the suballocated region instead
-//this looks pretty good, but go through the logic again and maybe change te order of some things (it could be fine though)
 void *sal_malloc(u_int32_t n) {
 
     //Use the idea of current node to make conceptualising/coding easier
@@ -82,8 +81,10 @@ void *sal_malloc(u_int32_t n) {
     u_int32_t n = sizeToN(n + HEADER_SIZE);
 
     //Scan through list looking for region of size n
-    int passCount = 0;      //Makes the while loop work the first time free_list_ptr is passed (i.e. the beginning of search)
-    int regionFound = 0;    //Boolean variable to identify if a suitable region has been found
+    //Makes the while loop work the first time free_list_ptr is passed
+    int passCount = 0; 
+    //Boolean variable to identify if a suitable region has been found     
+    int regionFound = 0;    
     while (regionFound == 0) {
         //Ensure that loop will halt next time it reaches start
         if (curr == free_list_ptr && passCount != 0) {
@@ -91,7 +92,8 @@ void *sal_malloc(u_int32_t n) {
             return NULL;
         }     
 
-        //Print error message if region accessed has already been allocated (and should therefore have been removed from free list);
+        //Print error message if region accessed has already been allocated 
+        //(and should therefore have been removed from free list);
         if (curr->magic == MAGIC_ALLOC) {
             fprintf(stderr, "Memory corruption");
             abort();
@@ -100,12 +102,9 @@ void *sal_malloc(u_int32_t n) {
         //Special case for undivided memory
         if (curr->next == curr) {
             //Check if suballocator is large enough
-            if (curr->size >= n) {
-                regionFound = 1; //if this is all youre doing here then you may as well just group it with below as its the same
-            } else {
-                //Meaning that suballocator isn't big enough
+            if (curr->size < n) {
                 return NULL;
-            }
+            } 
         //Case if region is sufficiently large    
         } else if (curr->size >= n) {
             regionFound = 1;
@@ -133,7 +132,29 @@ void *sal_malloc(u_int32_t n) {
 
 //Free memory associated with specific block pointer
 void sal_free(void *object) {
-    // TODO
+    
+    //As object points to memory AFTER the header, go back to start of header
+    object = object - HEADER_SIZE;
+
+    //Ensure the region is not already free
+    assert(object->magic == MAGIC_ALLOC);
+
+    //Find where in the list the object belongs
+    vlink_t curr = free_list_ptr;
+    while (curr < object) {
+        curr = curr->next;
+    }
+
+    //Insert object back into the list
+    object->next = curr->next;
+    object->prev = curr->prev;
+    curr->prev->next = object;
+    curr->prev = object;
+
+    //Change status of region to FREE
+    object->magic == MAGIC_FREE;
+
+    //Attempt to merge adjacent regions
     merge();
 }
 
@@ -142,22 +163,34 @@ void sal_end(void) {
 
     //Free all global variables, which makes accessing the (now deleted) suballocator impossible
     free(memory);
-    free(free_list_ptr); //dont think this and below need to be freed as they arent pointers, just variables(?)
+    free(free_list_ptr); //DANIEL - IF NOT FREE'D, THEN THEY SHOULD BE SET TO ZERO
     free(memory_size);
 
 }
 
 //Print all statistics regarding suballocator
 void sal_stats(void) {
+    //Print the global variables
     printf("sal_stats\n");
     printf("Global Variable 'memory' is: %g", memory);
     printf("Global Variable 'free_list_ptr' is: %g", free_list_ptr);
     printf("Global Variable 'memory_size' is: %g", memory_size);
+
+    //Print the list
+    vlink_t curr = free_list_ptr;
+    int passCount = 0;
+    printf("List:\n");
+    while (curr != free_list_ptr || passCount == 0) {
+        printf("i = %d, curr->size: %d, curr: %p", passCount, curr->size, curr);
+        passCount++;
+        curr = curr->next;
+    }
+
 }
 
-//New Functions -- will have to put prototypes in header file
 
-//Functions for sal_init and sal_malloc
+
+
 //Return usable size from given n value
 u_int32_t sizeToN(u_int32_t size) {
 
@@ -175,13 +208,12 @@ u_int32_t sizeToN(u_int32_t size) {
     return n;
 }
 
-//Functions for sal_malloc
 //Splits the region of memory passed in into two
 vlink_t memoryDivide(vlink_t curr) {
 
     //Extract temporary void pointer from curr (for arithmetic) 
-    (void*) temp = (void*)(curr); //i think youre meant to use a byte type but it probably doesnt matter
-    //^ you dont need brackets here -- just void *temp but maybe ^
+    void*temp = (void*)(curr); 
+
     //Progress temp to the new divided region
     temp = temp + (current->size)/2;
 
@@ -195,7 +227,7 @@ vlink_t memoryDivide(vlink_t curr) {
 
     //Link the new regions to the old ones (and vice versa)
     curr->next->prev = new;
-    new->next = curr->next;     
+    new->next = curr->next;        
     //Now new points to the old curr->next and vice versa
     curr->next = new;
     new->prev = curr;           
@@ -209,37 +241,41 @@ vlink_t enslaveRegion(vlink_t curr) {
 
     //Mark header as allocated
     curr->magic = MAGIC_ALLOC;
-    //Change all links to point to self
+    //Change neighbour's links to skip the enslaved region
     curr->prev->next = curr->next;
     curr->next->prev = curr->prev;
-    //also links that point to it need to point to either side of it (not sure if you did this, just by reading the comment)
+
     return curr;
 }
 
-void merge(void)
-{
-   free_header_t object = free_list_ptr->next;
-   while (object->next->size != object->size){
-      if (object == free_list_ptr){
-         return;
-      }
-      object = object->next;
-      if (object->magic != MAGIC_FREE){
-         printf("Non-free region in list");
-         exit(1);
-      }
-   }
-   if (((unsigned char *)object - (unsigned char *)memory) % (object->size) * 2 == 0){
-      object->size = object->size * 2;
-      object->next->next->prev = object;
-      object->next = object->next->next;
-   } else {
-      object = object->prev;
-      object->size = object->size * 2;
-      object->next->next->prev = object;
-      object->next = object->next->next;
-   }
-   object = free_list_ptr;
-   merge();
+
+//Daniel - you'll need to put comments in this. No idea whats going on
+//also - indent is 4 spaces
+void merge(void) {
+
+    free_header_t object = free_list_ptr->next;
+    while (object->next->size != object->size) {
+        if (object == free_list_ptr) {
+            return;
+        }
+        object = object->next;
+        if (object->magic != MAGIC_FREE) {
+            printf("Non-free region in list");
+            exit(1);
+        }
+    }
+
+    if (((unsigned char *)object - (unsigned char *)memory) % (object->size) * 2 == 0) {     //unsigned char is struct defined as a byte
+        object->size = object->size * 2;
+        object->next->next->prev = object;
+        object->next = object->next->next;
+    } else {
+        object = object->prev;
+        object->size = object->size * 2;
+        object->next->next->prev = object;
+        object->next = object->next->next;
+    }
+    object = free_list_ptr;
+    merge();
 }
 }
