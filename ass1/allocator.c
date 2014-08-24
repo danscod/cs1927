@@ -38,6 +38,7 @@ static vsize_t memory_size;   // number of bytes malloc'd in memory[]
 u_int32_t sizeToN(u_int32_t n);
 vlink_t memoryDivide (vlink_t curr);
 vlink_t enslaveRegion (vlink_t curr);
+void merge(void);
 
 //Initialise the suballocator, and malloc memory for it
 void sal_init(u_int32_t size) {
@@ -94,7 +95,7 @@ void *sal_malloc(u_int32_t n) {
 
         //Print error message if region accessed has already been allocated 
         //(and should therefore have been removed from free list);
-        if (curr->magic == MAGIC_ALLOC) {
+        if (curr->magic != MAGIC_FREE) {
             fprintf(stderr, "Memory corruption");
             abort();
         }
@@ -106,8 +107,8 @@ void *sal_malloc(u_int32_t n) {
                 return NULL;
             } 
         //Case if region is sufficiently large    
-        } else if (curr->size >= n) {
-            regionFound = 1;
+        } else if (curr->size >= n) { //this is just going to pick the first region large enough and split it
+            regionFound = 1;          //try to go through the whole list and find the smallest one that is large enough
         //Case if region is not large enough
         } else {
             curr = curr->next;
@@ -118,15 +119,15 @@ void *sal_malloc(u_int32_t n) {
     }
 
     //Divide segment of memory into smallest possible size
-    while (curr->size >= n + HEADER_SIZE) {
+    while (curr->size >= 2 * n) { //so it only splits if its more than twice the size, otherwise it will be too small
         curr = memoryDivide(vlink_t curr);
     }
 
     //Remove region from the free list
-    curr = vlink_t enslaveRegion (vlink_t curr);
+    curr = enslaveRegion (curr);
 
     //Return pointer to the first byte AFTER the region header
-    return ((void*)(curr + HEADER_SIZE));
+    return ((void *)curr + HEADER_SIZE);
 }
 
 
@@ -140,19 +141,19 @@ void sal_free(void *object) {
     assert(object->magic == MAGIC_ALLOC);
 
     //Find where in the list the object belongs
-    vlink_t curr = free_list_ptr;
+    vlink_t curr = free_list_ptr; //this will only work if free_list_ptr is before object -- you need to go through the list to find the lowest value
     while (curr < object) {
         curr = curr->next;
     }
 
     //Insert object back into the list
     object->next = curr->next;
-    object->prev = curr->prev;
+    object->prev = curr->prev; //one of these should be " = curr " (i think) draw it, youll end up skipping one
     curr->prev->next = object;
     curr->prev = object;
 
     //Change status of region to FREE
-    object->magic == MAGIC_FREE;
+    object->magic = MAGIC_FREE;
 
     //Attempt to merge adjacent regions
     merge();
@@ -163,8 +164,9 @@ void sal_end(void) {
 
     //Free all global variables, which makes accessing the (now deleted) suballocator impossible
     free(memory);
-    free(free_list_ptr); //DANIEL - IF NOT FREE'D, THEN THEY SHOULD BE SET TO ZERO
-    free(memory_size);
+    //memory = NULL; //should check if free does this
+    free_list_ptr = NULL;
+    memory_size = 0;
 
 }
 
@@ -195,9 +197,8 @@ void sal_stats(void) {
 u_int32_t sizeToN(u_int32_t size) {
 
     //round size to the nearest upper power of two, unless already power of two
-    if ((size != 0) && (size & (size-1)) == 0) {
+    if ((size != 0) && (size & (size - 1)) == 0) {
         n = size;
-        break;
     } else {
         n = 1;
         while (n < size) {
@@ -212,21 +213,21 @@ u_int32_t sizeToN(u_int32_t size) {
 vlink_t memoryDivide(vlink_t curr) {
 
     //Extract temporary void pointer from curr (for arithmetic) 
-    void*temp = (void*)(curr); 
+    void *temp = (void *)(curr); 
 
     //Progress temp to the new divided region
-    temp = temp + (current->size)/2;
+    temp = temp + (current->size) / 2;
 
     //Setup the new region header
     vlink_t new = temp;
-    new->size = curr->size/2;
+    new->size = curr->size / 2;
     new->magic = MAGIC_FREE;
 
     //Shrink the old region
-    curr->size = (curr->size)/2;
+    curr->size = (curr->size) / 2;
 
     //Link the new regions to the old ones (and vice versa)
-    curr->next->prev = new;
+    curr->next->prev = new; //ill trust you, but if you havnt then double check it, itll be a pain to find if it needs to be fixed
     new->next = curr->next;        
     //Now new points to the old curr->next and vice versa
     curr->next = new;
@@ -242,40 +243,41 @@ vlink_t enslaveRegion(vlink_t curr) {
     //Mark header as allocated
     curr->magic = MAGIC_ALLOC;
     //Change neighbour's links to skip the enslaved region
-    curr->prev->next = curr->next;
+    curr->prev->next = curr->next; //i feel like this might skip one in one direction as well (im sure this is annoying (sorry) but its hard to fix and easy to map)
     curr->next->prev = curr->prev;
 
     return curr;
 }
 
-
-//Daniel - you'll need to put comments in this. No idea whats going on
-//also - indent is 4 spaces
 void merge(void) {
-
+    //set to next so you can loop until its found again
     free_header_t object = free_list_ptr->next;
+    //loop until adjacent regions of equal size are found
     while (object->next->size != object->size) {
+        //ends if it goes through whole list
         if (object == free_list_ptr) {
             return;
         }
         object = object->next;
+        //double checking the list
         if (object->magic != MAGIC_FREE) {
             printf("Non-free region in list");
             exit(1);
         }
     }
-
-    if (((unsigned char *)object - (unsigned char *)memory) % (object->size) * 2 == 0) {     //unsigned char is struct defined as a byte
-        object->size = object->size * 2;
-        object->next->next->prev = object;
-        object->next = object->next->next;
-    } else {
-        object = object->prev;
-        object->size = object->size * 2;
-        object->next->next->prev = object;
-        object->next = object->next->next;
-    }
-    object = free_list_ptr;
+    //check whether to merge with next or prev -- which upon rereading is unneccessary
+    //if (((unsigned char *)object - (unsigned char *)memory) % (object->size * 2) == 0) {     //unsigned char is a byte (typedef)
+    //change list to skip object being merged and increase size -- object being skipped is left as is because its irrelevant to change and unaccessable
+    object->size = object->size * 2;
+    object->next->next->prev = object;
+    object->next = object->next->next;
+    //} else {
+    //    object = object->prev;
+    //    object->size = object->size * 2;
+    //    object->next->next->prev = object;
+    //    object->next = object->next->next;
+    //}
+    free_list_ptr = object;
+    //recurses to check if another set can be merged
     merge();
-}
 }
