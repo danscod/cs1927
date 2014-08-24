@@ -74,7 +74,7 @@ void sal_init(u_int32_t size) {
 //Malloc for the program above but using the suballocated region instead
 void *sal_malloc(u_int32_t n) {
 
-    //Use the idea of current node to make conceptualising easier
+    //Use the idea of current node to make conceptualising/coding easier
     vlink_t curr = free_list_ptr;
 
     //Round n to nearest upper power of two, including the header
@@ -132,6 +132,9 @@ void *sal_malloc(u_int32_t n) {
 //Free all memory associated with suballocator
 void sal_free(void *object) {
     // TODO
+
+    //To clarify what object is...
+    vlink_t 
 }
 
 //Terminate the suballocator - must sal_init to use again

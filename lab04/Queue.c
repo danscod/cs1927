@@ -63,6 +63,7 @@ void enterQueue (Queue q, Item it)
       q->head = n; 
    }
    q->tail = n;
+   q->size++;
 }
 
 // remove Item from head of Queue; return it
@@ -92,6 +93,7 @@ void showQueue(Queue q)
    curr = q->head;
    while (curr != NULL) {
       printf(" %02d", curr->item);
+      curr = curr->next;
    }
    printf(" T\n");
 }

@@ -266,34 +266,35 @@ void ListDelete(List L)
 	assert (L != NULL);
 	ListNode *swag = L->curr;
 	//list empty
-	if (L->nitems == 0)
-	   return;
+	if (L->nitems == 0) {
+		return;
+	}
 	//if deleting any other than first
 	if (L->curr != L->first){
       L->curr->prev->next = L->curr->next;
    }
    //if deleting any other than last
-   if (L->curr != L->last){
+   if (L->curr != L->last) {
       L->curr->next->prev = L->curr->prev;
    }
    //if in middle
-   if (L->curr != L->last && L->curr != L->first){
+   if (L->curr != L->last && L->curr != L->first) {
       L->curr = L->curr->next;
       free(swag);
    //if first
-   } else if (L->curr == L->first && L->nitems > 1){
+   } else if (L->curr == L->first && L->nitems > 1) {
       L->curr = L->curr->next;
       free(L->curr->prev);
       L->curr->prev = NULL;
       L->first = L->curr;
    //if deleting last
-   } else if (L->curr == L->last && L->nitems > 1){
+   } else if (L->curr == L->last && L->nitems > 1) {
       L->curr = L->curr->prev;
       free(L->curr->next);
       L->curr->next = NULL;
       L->last = L->curr;
    //if one element
-   } else if (L->nitems == 1){
+   } else if (L->nitems == 1) {
       free(L->curr);
       L->curr = NULL;
       L->last = NULL;
