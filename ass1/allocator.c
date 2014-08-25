@@ -39,6 +39,8 @@ u_int32_t sizeToN(u_int32_t n);
 vlink_t memoryDivide (vlink_t curr);
 vlink_t enslaveRegion (vlink_t curr);
 void merge(void);
+void* toPointer(vlink_t index);
+vlink_t toIndex(void* pointer);
 
 //Initialise the suballocator, and malloc memory for it
 void sal_init(u_int32_t size) {
@@ -52,7 +54,7 @@ void sal_init(u_int32_t size) {
     u_int32_t n = sizeToN(size);
 
     //set global variables | initialise suballocator
-    memory = malloc(n);         
+    memory = (byte *)malloc(n);         
 
     //check if malloc worked properly
     if (memory == NULL){
@@ -64,12 +66,13 @@ void sal_init(u_int32_t size) {
     free_list_ptr = memory[0]; //index of header of initial block
     memory_size = n;
 
+    //this is dodge???
     //set first free list pointer
-    free_header_t *T = (free_header_t *)memory[0];                                  
+    free_header_t *T = (free_header_t *)memory;                                  
     T->magic = MAGIC_FREE;
     T->size = n;
-    T->next = T;                                                                
-    T->prev = T;
+    T->next = 0;                                                                
+    T->prev = 0;
 }
 
 //Malloc for the program above but using the suballocated region instead
@@ -79,8 +82,14 @@ void *sal_malloc(u_int32_t n) {
     vlink_t curr = free_list_ptr;
 
     //Round n to nearest upper power of two, including the header
-    u_int32_t n = sizeToN(n + HEADER_SIZE);
+    n = sizeToN(n + HEADER_SIZE);
 
+/*
+    //Check if the allocator is large enough
+    if (n > memory_size) {
+        return NULL;
+    }
+*/
     //Scan through list looking for region of size n
     //Makes the while loop work the first time free_list_ptr is passed
     int passCount = 0; 
@@ -95,23 +104,18 @@ void *sal_malloc(u_int32_t n) {
 
         //Print error message if region accessed has already been allocated 
         //(and should therefore have been removed from free list);
-        if (curr->magic != MAGIC_FREE) {
+        if (toPointer(curr).magic != MAGIC_FREE) {
             fprintf(stderr, "Memory corruption");
             abort();
         }
 
-        //Special case for undivided memory
-        if (curr->next == curr) {
-            //Check if suballocator is large enough
-            if (curr->size < n) {
-                return NULL;
-            } 
+
         //Case if region is sufficiently large    
-        } else if (curr->size >= n) { //this is just going to pick the first region large enough and split it
+        } else if ((toPointer(curr).size) >= n) { //this is just going to pick the first region large enough and split it
             regionFound = 1;          //try to go through the whole list and find the smallest one that is large enough
         //Case if region is not large enough
         } else {
-            curr = curr->next;
+            curr = toPointer(curr).next;
         }
 
         //Increment passCount
@@ -119,12 +123,12 @@ void *sal_malloc(u_int32_t n) {
     }
 
     //Divide segment of memory into smallest possible size
-    while (curr->size >= 2 * n) { //so it only splits if its more than twice the size, otherwise it will be too small
+    while (toPointer(curr).size >= 2 * n) { //so it only splits if its more than twice the size, otherwise it will be too small
         curr = memoryDivide(vlink_t curr);
     }
 
     //Remove region from the free list
-    curr = enslaveRegion (curr);
+    curr = enslaveRegion(curr);
 
     //Return pointer to the first byte AFTER the region header
     return ((void *)curr + HEADER_SIZE);
@@ -142,15 +146,15 @@ void sal_free(void *object) {
 
     //Find where in the list the object belongs
     vlink_t curr = free_list_ptr; //this will only work if free_list_ptr is before object -- you need to go through the list to find the lowest value
-    while (curr < object) {
-        curr = curr->next;
+    while (toPointer(curr) < object) {
+        curr = toPointer(curr).next;
     }
 
     //Insert object back into the list
-    object->next = curr->next;
-    object->prev = curr->prev; //one of these should be " = curr " (i think) draw it, youll end up skipping one
-    curr->prev->next = object;
-    curr->prev = object;
+    object->next = toPointer(curr).next;
+    object->prev = toPointer(curr).prev; //one of these should be " = curr " (i think) draw it, youll end up skipping one
+    toPointer(curr).prev.next = object;
+    toPointer(curr).prev = object;
 
     //Change status of region to FREE
     object->magic = MAGIC_FREE;
@@ -174,36 +178,34 @@ void sal_end(void) {
 void sal_stats(void) {
     //Print the global variables
     printf("sal_stats\n");
-    printf("Global Variable 'memory' is: %g", memory);
-    printf("Global Variable 'free_list_ptr' is: %g", free_list_ptr);
-    printf("Global Variable 'memory_size' is: %g", memory_size);
+    printf("Global Variable 'memory' is: %p", memory);
+    printf("Global Variable 'free_list_ptr' is: %d", free_list_ptr);
+    printf("Global Variable 'memory_size' is: %d", memory_size);
 
     //Print the list
     vlink_t curr = free_list_ptr;
     int passCount = 0;
     printf("List:\n");
     while (curr != free_list_ptr || passCount == 0) {
-        printf("i = %d, curr->size: %d, curr: %p", passCount, curr->size, curr);
+        printf("i = %d, curr.size: %d, curr index: %d, curr pointer: %p\n", passCount, toPointer(curr).size, curr, toPointer(curr));
         passCount++;
         curr = curr->next;
     }
 
 }
 
-
-
-
 //Return usable size from given n value
 u_int32_t sizeToN(u_int32_t size) {
 
+    int n = 1;
     //round size to the nearest upper power of two, unless already power of two
     if ((size != 0) && (size & (size - 1)) == 0) {
         n = size;
     } else {
-        n = 1;
         while (n < size) {
             //This isn't very efficient, but works for time being
             n = 2 * n;
+        }
     }
 
     return n;
@@ -212,26 +214,26 @@ u_int32_t sizeToN(u_int32_t size) {
 //Splits the region of memory passed in into two
 vlink_t memoryDivide(vlink_t curr) {
 
-    //Extract temporary void pointer from curr (for arithmetic) 
-    void *temp = (void *)(curr); 
+    //Create temporary vlink
+    vlink_t temp = curr;              
 
     //Progress temp to the new divided region
-    temp = temp + (current->size) / 2;
+    temp = temp + (toPointer(curr).size) / 2;
 
     //Setup the new region header
-    vlink_t new = temp;
-    new->size = curr->size / 2;
-    new->magic = MAGIC_FREE;
+    free_header_t new = toPointer(temp);
+    new.size = toPointer(curr).size / 2;
+    new.magic = MAGIC_FREE;
 
     //Shrink the old region
-    curr->size = (curr->size) / 2;
+    toPointer(curr).size = (curr.size) / 2;
 
     //Link the new regions to the old ones (and vice versa)
-    curr->next->prev = new; //ill trust you, but if you havnt then double check it, itll be a pain to find if it needs to be fixed
-    new->next = curr->next;        
+    toPointer(curr).next.prev = new; //ill trust you, but if you havnt then double check it, itll be a pain to find if it needs to be fixed
+    new.next = toPointer(curr).next;        
     //Now new points to the old curr->next and vice versa
-    curr->next = new;
-    new->prev = curr;           
+    toPointer(curr).next = new;
+    new.prev = curr;                                                                                                               ///this looks suss
     //Now curr points to new and vice versa
 
     return curr;
@@ -241,26 +243,26 @@ vlink_t memoryDivide(vlink_t curr) {
 vlink_t enslaveRegion(vlink_t curr) {
 
     //Mark header as allocated
-    curr->magic = MAGIC_ALLOC;
+    toPointer(curr).magic = MAGIC_ALLOC;
     //Change neighbour's links to skip the enslaved region
-    curr->prev->next = curr->next; //i feel like this might skip one in one direction as well (im sure this is annoying (sorry) but its hard to fix and easy to map)
-    curr->next->prev = curr->prev;
+    toPointer(curr).prev.next = toPointer(curr).next; //i feel like this might skip one in one direction as well (im sure this is annoying (sorry) but its hard to fix and easy to map)
+    toPointer(curr).next.prev = toPointer(curr).prev;
 
     return curr;
 }
 
 void merge(void) {
     //set to next so you can loop until its found again
-    free_header_t object = free_list_ptr->next;
+    free_header_t *object = toPointer(free_list_ptr).next;
     //loop until adjacent regions of equal size are found
-    while (object->next->size != object->size) {
+    while (toPointer(object.next).size != object.size) {
         //ends if it goes through whole list
-        if (object == free_list_ptr) {
+        if (toIndex(object) == free_list_ptr) {
             return;
         }
-        object = object->next;
+        object = toPointer(object.next);
         //double checking the list
-        if (object->magic != MAGIC_FREE) {
+        if (object.magic != MAGIC_FREE) {
             printf("Non-free region in list");
             exit(1);
         }
@@ -268,16 +270,25 @@ void merge(void) {
     //check whether to merge with next or prev -- which upon rereading is unneccessary
     //if (((unsigned char *)object - (unsigned char *)memory) % (object->size * 2) == 0) {     //unsigned char is a byte (typedef)
     //change list to skip object being merged and increase size -- object being skipped is left as is because its irrelevant to change and unaccessable
-    object->size = object->size * 2;
-    object->next->next->prev = object;
-    object->next = object->next->next;
+    object.size = object.size * 2;
+    toPointer(toPointer(object.next).next).prev = toIndex(object);
+    object.next = toPointer(object.next).next;
     //} else {
     //    object = object->prev;
     //    object->size = object->size * 2;
     //    object->next->next->prev = object;
     //    object->next = object->next->next;
     //}
-    free_list_ptr = object;
+    free_list_ptr = toIndex(object);
     //recurses to check if another set can be merged
     merge();
+}
+
+//Helper Functions
+void* toPointer(vlink_t index) {
+    return (memory* + index);
+}
+
+vlink_t toIndex(void* pointer) {
+    return (pointer - memory*);
 }
