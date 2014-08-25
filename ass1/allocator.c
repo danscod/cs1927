@@ -126,7 +126,7 @@ void *sal_malloc(u_int32_t n) {
 
     //Divide segment of memory into smallest possible size
     while (toPointer(curr)->size >= 2 * n) { //so it only splits if its more than twice the size, otherwise it will be too small
-        break; //MUST REMOVE THIS
+
         curr = memoryDivide(curr);
     }
     printf("loop escaped\n");
@@ -155,10 +155,10 @@ void sal_end(void) {
 
 void sal_stats(void) {
     //Print the global variables
-    printf("sal_stats\n");
+    printf("sal_stats\n\n");
     printf("Global Variable 'memory' is: %p\n", memory);
     printf("Global Variable 'free_list_ptr' is: %d\n", free_list_ptr);
-    printf("Global Variable 'memory_size' is: %d\n", memory_size);
+    printf("Global Variable 'memory_size' is: %d\n\n", memory_size);
     
 }
 
@@ -194,7 +194,31 @@ vlink_t toIndex(free_header_t* pointer) {
 }
 
 //INCOMPLETE
-vlink_t memoryDivide (vlink_t curr) {
+//Splits the region of memory passed in into two
+vlink_t memoryDivide(vlink_t curr) {
+
+    //Create temporary vlink
+    vlink_t temp = curr;              
+
+    //Progress temp to the new divided region
+    temp = temp + (toPointer(curr)->size) / 2;
+
+    //Setup the new region header
+    free_header_t *new = toPointer(temp);
+    new->size = toPointer(curr)->size / 2;
+    new->magic = MAGIC_FREE;
+
+    //Shrink the old region
+    toPointer(curr)->size = (toPointer(curr)->size) / 2;
+
+    //Link the new regions to the old ones (and vice versa)
+    toPointer(toPointer(curr)->next)->prev = toIndex(new); //ill trust you, but if you havnt then double check it, itll be a pain to find if it needs to be fixed
+    new->next = toPointer(curr)->next;        
+    //Now new points to the old curr->next and vice versa
+    toPointer(curr)->next = toIndex(new);
+    new->prev = curr;                                                                                                               ///this looks suss
+    //Now curr points to new and vice versa
+
     return curr;
 }
 
