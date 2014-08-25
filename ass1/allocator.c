@@ -35,8 +35,11 @@ static vsize_t memory_size;   // number of bytes malloc'd in memory[]
 
 //Function Prototypes
 u_int32_t sizeToN(u_int32_t n);
-byte* toPointer(vlink_t index);
-vlink_t toIndex(byte* pointer);
+free_header_t* toPointer(vlink_t index);
+vlink_t toIndex(free_header_t* pointer);
+vlink_t memoryDivide (vlink_t curr);
+vlink_t enslaveRegion (vlink_t curr);
+void merge(void);
 
 //Essential Functions
 //Initialise the suballocator, and malloc memory for it
@@ -101,34 +104,37 @@ void *sal_malloc(u_int32_t n) {
 
         //Print error message if region accessed has already been allocated 
         //(and should therefore have been removed from free list);
-        if (toPointer(curr).magic != MAGIC_FREE) {
+        if (toPointer(curr)->magic != MAGIC_FREE) {
             fprintf(stderr, "Memory corruption");
             abort();
         }
 
 
         //Case if region is sufficiently large    
-        } else if ((toPointer(curr).size) >= n) { //this is just going to pick the first region large enough and split it
+        if ((toPointer(curr)->size) >= n) { //this is just going to pick the first region large enough and split it
             regionFound = 1;          //try to go through the whole list and find the smallest one that is large enough
         //Case if region is not large enough
         } else {
-            curr = toPointer(curr).next;
+            curr = toPointer(curr)->next;
         }
 
         //Increment passCount
         passCount++;
+        printf("passCount = %d, regionFound = %d, curr = %p, curr->next = %p\n", passCount, regionFound, toPointer(curr), toPointer(curr));
     }
+    printf("loop escaped\n");
 
     //Divide segment of memory into smallest possible size
-    while (toPointer(curr).size >= 2 * n) { //so it only splits if its more than twice the size, otherwise it will be too small
-        curr = memoryDivide(vlink_t curr);
+    while (toPointer(curr)->size >= 2 * n) { //so it only splits if its more than twice the size, otherwise it will be too small
+        break; //MUST REMOVE THIS
+        curr = memoryDivide(curr);
     }
-
+    printf("loop escaped\n");
     //Remove region from the free list
     curr = enslaveRegion(curr);
 
     //Return pointer to the first byte AFTER the region header
-    return ((void *)curr + HEADER_SIZE);
+    return (void*)(toPointer(curr) + HEADER_SIZE);
 }
 
 void sal_free(void *object)
@@ -178,11 +184,24 @@ u_int32_t sizeToN(u_int32_t size) {
 
 //Helper Functions
 //Converts an index to a pointer
-byte* toPointer(vlink_t index) {
-    return (memory + index);
+free_header_t* toPointer(vlink_t index) {
+    return ((free_header_t*)(memory + index));
 }
 
 //Converts a pointer to an index
-vlink_t toIndex(byte* pointer) {
-    return (pointer - memory);
+vlink_t toIndex(free_header_t* pointer) {
+    return (pointer - (free_header_t *)memory);
+}
+
+//INCOMPLETE
+vlink_t memoryDivide (vlink_t curr) {
+    return curr;
+}
+
+vlink_t enslaveRegion (vlink_t curr) {
+    return curr;
+}
+
+void merge(void) {
+    return;
 }
