@@ -122,15 +122,15 @@ void *sal_malloc(u_int32_t n) {
 
         //Increment passCount
         passCount++;
-        printf("passCount = %d, regionFound = %d, curr = %p, curr->next = %p\n", passCount, regionFound, toPointer(curr), toPointer(curr));
+        //printf("passCount = %d, regionFound = %d, curr = %p, curr->next = %p\n", passCount, regionFound, toPointer(curr), toPointer(curr));
     } 
-    printf("loop escaped\n");
+    //printf("loop escaped\n");
 
     //Divide segment of memory into smallest possible size
     while (toPointer(curr)->size >= 2 * n) { //so it only splits if its more than twice the size, otherwise it will be too small
         curr = memoryDivide(curr);
     }
-    printf("loop escaped\n");
+    //printf("loop escaped\n");
 
     //Remove region from the free list
     curr = enslaveRegion(curr);
@@ -253,7 +253,8 @@ void printHeaders(void) {
 
     do {
         //Print this header
-        printf("curr: %d\n", curr);
+        printf("curr(index): %d\n", curr);
+        printf("curr(pointer): %p\n", toPointer(curr));
         printf("curr->MAGIC: 0x%08x\n", toPointer(curr)->magic);
         printf("curr->size: %d\n", toPointer(curr)->size);    
         printf("curr->next: %d\n", toPointer(curr)->next);  
