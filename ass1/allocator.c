@@ -35,6 +35,8 @@ static vsize_t memory_size;   // number of bytes malloc'd in memory[]
 
 //Function Prototypes
 u_int32_t sizeToN(u_int32_t n);
+byte* toPointer(vlink_t index);
+vlink_t toIndex(byte* pointer);
 
 //Essential Functions
 void sal_init(u_int32_t size) {
@@ -91,15 +93,23 @@ void sal_end(void) {
 
 }
 
-void sal_stats(void)
-{
-   // Optional, but useful
-   printf("sal_stats\n");
-    // we "use" the global variables here
-    // just to keep the compiler quiet
-   memory = memory;
-   free_list_ptr = free_list_ptr;
-   memory_size = memory_size;
+void sal_stats(void) {
+    //Print the global variables
+    printf("sal_stats\n");
+    printf("Global Variable 'memory' is: %p\n", memory);
+    printf("Global Variable 'free_list_ptr' is: %d\n", free_list_ptr);
+    printf("Global Variable 'memory_size' is: %d\n", memory_size);
+
+    //Print the list
+    //vlink_t curr = free_list_ptr;
+    //int passCount = 0;
+    //printf("List:\n");
+    /*while (curr != free_list_ptr || passCount == 0) {
+        printf("i = %d, curr.size: %d, curr index: %d, curr pointer: %p\n", passCount, toPointer(curr).size, curr, toPointer(curr));
+        passCount++;
+        curr = toPointer(curr).next;
+    }
+    */
 }
 
 
@@ -120,4 +130,15 @@ u_int32_t sizeToN(u_int32_t size) {
     }
 
     return n;
+}
+
+//Helper Functions
+//Converts an index to a pointer
+byte* toPointer(vlink_t index) {
+    return (memory + index);
+}
+
+//Converts a pointer to an index
+vlink_t toIndex(byte* pointer) {
+    return (pointer - memory);
 }

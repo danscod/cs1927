@@ -285,10 +285,12 @@ void merge(void) {
 }
 
 //Helper Functions
+//Converts an index to a pointer
 void* toPointer(vlink_t index) {
     return (memory* + index);
 }
 
+//Converts a pointer to an index
 vlink_t toIndex(void* pointer) {
     return (pointer - memory*);
 }
