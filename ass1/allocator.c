@@ -39,6 +39,7 @@ byte* toPointer(vlink_t index);
 vlink_t toIndex(byte* pointer);
 
 //Essential Functions
+//Initialise the suballocator, and malloc memory for it
 void sal_init(u_int32_t size) {
 
     //Check if already initialised, do nothing if so
@@ -71,10 +72,63 @@ void sal_init(u_int32_t size) {
     T->prev = 0;
 }
 
-void *sal_malloc(u_int32_t n)
-{
-   // TODO
-   return NULL; // temporarily
+//Malloc for the program above but using the suballocated region instead
+void *sal_malloc(u_int32_t n) {
+
+    //Use the idea of current node to make conceptualising/coding easier
+    vlink_t curr = free_list_ptr;
+
+    //Round n to nearest upper power of two, including the header
+    n = sizeToN(n + HEADER_SIZE);
+
+/*
+    //Check if the allocator is large enough
+    if (n > memory_size) {
+        return NULL;
+    }
+*/
+    //Scan through list looking for region of size n
+    //Makes the while loop work the first time free_list_ptr is passed
+    int passCount = 0; 
+    //Boolean variable to identify if a suitable region has been found     
+    int regionFound = 0;    
+    while (regionFound == 0) {
+        //Ensure that loop will halt next time it reaches start
+        if (curr == free_list_ptr && passCount != 0) {
+            fprintf(stderr, "sal_malloc: insufficient memory");
+            return NULL;
+        }     
+
+        //Print error message if region accessed has already been allocated 
+        //(and should therefore have been removed from free list);
+        if (toPointer(curr).magic != MAGIC_FREE) {
+            fprintf(stderr, "Memory corruption");
+            abort();
+        }
+
+
+        //Case if region is sufficiently large    
+        } else if ((toPointer(curr).size) >= n) { //this is just going to pick the first region large enough and split it
+            regionFound = 1;          //try to go through the whole list and find the smallest one that is large enough
+        //Case if region is not large enough
+        } else {
+            curr = toPointer(curr).next;
+        }
+
+        //Increment passCount
+        passCount++;
+    }
+
+    //Divide segment of memory into smallest possible size
+    while (toPointer(curr).size >= 2 * n) { //so it only splits if its more than twice the size, otherwise it will be too small
+        curr = memoryDivide(vlink_t curr);
+    }
+
+    //Remove region from the free list
+    curr = enslaveRegion(curr);
+
+    //Return pointer to the first byte AFTER the region header
+    return ((void *)curr + HEADER_SIZE);
 }
 
 void sal_free(void *object)
@@ -99,17 +153,7 @@ void sal_stats(void) {
     printf("Global Variable 'memory' is: %p\n", memory);
     printf("Global Variable 'free_list_ptr' is: %d\n", free_list_ptr);
     printf("Global Variable 'memory_size' is: %d\n", memory_size);
-
-    //Print the list
-    //vlink_t curr = free_list_ptr;
-    //int passCount = 0;
-    //printf("List:\n");
-    /*while (curr != free_list_ptr || passCount == 0) {
-        printf("i = %d, curr.size: %d, curr index: %d, curr pointer: %p\n", passCount, toPointer(curr).size, curr, toPointer(curr));
-        passCount++;
-        curr = toPointer(curr).next;
-    }
-    */
+    
 }
 
 
