@@ -121,7 +121,7 @@ void *sal_malloc(u_int32_t n) {
         //Increment passCount
         passCount++;
         printf("passCount = %d, regionFound = %d, curr = %p, curr->next = %p\n", passCount, regionFound, toPointer(curr), toPointer(curr));
-    }
+    } 
     printf("loop escaped\n");
 
     //Divide segment of memory into smallest possible size
