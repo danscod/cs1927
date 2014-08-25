@@ -40,6 +40,7 @@ vlink_t toIndex(free_header_t* pointer);
 vlink_t memoryDivide (vlink_t curr);
 vlink_t enslaveRegion (vlink_t curr);
 void merge(void);
+void printHeaders(void);
 
 //Essential Functions
 //Initialise the suballocator, and malloc memory for it
@@ -98,14 +99,15 @@ void *sal_malloc(u_int32_t n) {
     while (regionFound == 0) {
         //Ensure that loop will halt next time it reaches start
         if (curr == free_list_ptr && passCount != 0) {
-            fprintf(stderr, "sal_malloc: insufficient memory");
+            fprintf(stderr, "sal_malloc: insufficient memory\n");
             return NULL;
         }     
 
         //Print error message if region accessed has already been allocated 
         //(and should therefore have been removed from free list);
         if (toPointer(curr)->magic != MAGIC_FREE) {
-            fprintf(stderr, "Memory corruption");
+            fprintf(stderr, "Memory corruption\n");
+            sal_stats();
             abort();
         }
 
@@ -126,10 +128,10 @@ void *sal_malloc(u_int32_t n) {
 
     //Divide segment of memory into smallest possible size
     while (toPointer(curr)->size >= 2 * n) { //so it only splits if its more than twice the size, otherwise it will be too small
-
         curr = memoryDivide(curr);
     }
     printf("loop escaped\n");
+
     //Remove region from the free list
     curr = enslaveRegion(curr);
 
@@ -153,6 +155,7 @@ void sal_end(void) {
 
 }
 
+//Print all statistics regarding suballocator
 void sal_stats(void) {
     //Print the global variables
     printf("sal_stats\n\n");
@@ -160,6 +163,7 @@ void sal_stats(void) {
     printf("Global Variable 'free_list_ptr' is: %d\n", free_list_ptr);
     printf("Global Variable 'memory_size' is: %d\n\n", memory_size);
     
+    printHeaders();
 }
 
 
@@ -222,10 +226,42 @@ vlink_t memoryDivide(vlink_t curr) {
     return curr;
 }
 
-vlink_t enslaveRegion (vlink_t curr) {
+//Converts a region from free to allocated, and removes it from the free list
+vlink_t enslaveRegion(vlink_t curr) {
+
+    //Mark header as allocated
+    toPointer(curr)->magic = MAGIC_ALLOC;
+    //Change neighbour's links to skip the enslaved region
+    toPointer(toPointer(curr)->prev)->next = toPointer(curr)->next; //i feel like this might skip one in one direction as well (im sure this is annoying (sorry) but its hard to fix and easy to map)
+    toPointer(toPointer(curr)->next)->prev = toPointer(curr)->prev;
+    //Destroy links within the allocated header
+    toPointer(curr)->next = curr;
+    toPointer(curr)->prev = curr;
+
     return curr;
 }
 
 void merge(void) {
+    return;
+}
+
+//print out all headers 
+void printHeaders(void) {
+
+    //Start from the beginning
+    vlink_t curr = free_list_ptr;
+
+    do {
+        //Print this header
+        printf("curr: %d\n", curr);
+        printf("curr->MAGIC: 0x%08x\n", toPointer(curr)->magic);
+        printf("curr->size: %d\n", toPointer(curr)->size);    
+        printf("curr->next: %d\n", toPointer(curr)->next);  
+        printf("curr->prev: %d\n\n", toPointer(curr)->prev); 
+
+        //Move along
+        curr = toPointer(curr)->next;
+    } while (curr != free_list_ptr);
+ 
     return;
 }
