@@ -234,7 +234,7 @@ free_header_t *toPointer(vlink_t index) {
 
 //Converts a pointer to an index
 vlink_t toIndex(free_header_t* pointer) {
-    return (pointer - (free_header_t *)memory);
+    return ((byte *)pointer - memory);
 }
 
 //INCOMPLETE
@@ -248,6 +248,7 @@ vlink_t memoryDivide(vlink_t curr) {
     //Create temporary vlink
     vlink_t temp = curr;              
     printf("currP = %p, curr = %d, curr->next = %p, free_list_ptr = %d, temp = %d\n", toPointer(curr), curr, toPointer(curr), free_list_ptr, temp);
+    printf("temp = %d, toPointer(temp) = %p, toIndex(toPointer(temp)) = %d\n\n", temp, toPointer(temp), toIndex(toPointer(temp)));
     //Progress temp to the new divided region
     temp = temp + ((toPointer(curr)->size) / 2);
     printf("temp = %d, toPointer(temp) = %p, toIndex(toPointer(temp)) = %d\n\n", temp, toPointer(temp), toIndex(toPointer(temp)));
