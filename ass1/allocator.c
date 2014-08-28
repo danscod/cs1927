@@ -144,10 +144,14 @@ void *sal_malloc(u_int32_t n) {
 void sal_free(void *object)
 {
     //As object points to memory AFTER the header, go back to start of header
-    object = (byte *)object - HEADER_SIZE;
+    object = object - HEADER_SIZE;
+    //object = (free_header_t *)object;
+
+    //Get the index for object
+    vlink_t objectIndex = toIndex(object);
 
     //Ensure the region is not already free
-    assert(object->magic == MAGIC_ALLOC);
+    assert(toPointer(objectIndex)->magic == MAGIC_ALLOC);
 
     //Find where in the list the object belongs
     vlink_t temp = toPointer(free_list_ptr)->next;
@@ -159,18 +163,18 @@ void sal_free(void *object)
         temp = toPointer(temp)->next;
     }
     //curr is now the lowest position in free list
-    while (curr < object) {
+    while (curr < objectIndex) {
         curr = toPointer(curr)->next;
     }
 
     //Insert object back into the list
-    object->next = curr;
-    object->prev = toPointer(curr)->prev;
-    toPointer(toPointer(curr)->prev)->next = toIndex(object); //dont know if this line works (like syntax wise)
-    curr.prev = toIndex(object);
+    toPointer(objectIndex)->next = curr;
+    toPointer(objectIndex)->prev = toPointer(curr)->prev;
+    toPointer(toPointer(curr)->prev)->next = objectIndex; //dont know if this line works (like syntax wise)
+    toPointer(curr)->prev = objectIndex;
 
     //Change status of region to FREE
-    object->magic = MAGIC_FREE;
+    toPointer(objectIndex)->magic = MAGIC_FREE;
 
     //Attempt to merge adjacent regions
     merge();
@@ -295,7 +299,7 @@ void merge(void) {
     if (object % (toPointer(object)->size * 2) == 0) {
       toPointer(object)->size = toPointer(object)->size * 2;
       toPointer(toPointer(toPointer(object)->next)->next)->prev = object;
-      object.next = toPointer(object.next).next;
+      toPointer(object)->next = toPointer(toPointer(object)->next)->next;
     }
 /*    else {
         object = object->prev;
