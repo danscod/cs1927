@@ -79,11 +79,14 @@ void sal_init(u_int32_t size) {
 
 //Malloc for the program above but using the suballocated region instead
 void *sal_malloc(u_int32_t n) {
+
+    printf("sal_malloc entered\n");
     int oldSize = memory_size + 1;
     //Use the idea of current node to make conceptualising/coding easier
     vlink_t curr = free_list_ptr;
     vlink_t region;
 
+    printf("1");
     //Round n to nearest upper power of two, including the header
     n = sizeToN(n + HEADER_SIZE);
 
@@ -97,9 +100,10 @@ void *sal_malloc(u_int32_t n) {
     //Makes the while loop work the first time free_list_ptr is passed
     int passCount = 0; 
     //Boolean variable to identify if a suitable region has been found     
-    int regionFound = 0;    
-    while ((regionFound == 0 || curr != free_list_ptr) && !(regionFound == 0 && curr != free_list_ptr)) {//go until you get back to the start and a region is found
-        //printf("passCount = %d, regionFound = %d, curr = %p, curr->next = %p\n", passCount, regionFound, toPointer(curr), toPointer(curr));
+    int regionFound = 0; 
+    int currSize = 0;
+    do{ //go until you get back to the start and a region is found
+        printf("passCount = %d, regionFound = %d, curr = %p, curr->next = %p\n", passCount, regionFound, toPointer(curr), toPointer(curr));
 
         //Ensure that loop will halt next time it reaches start //please check the line ^ -- it should loop if A || B is true and A && B is not true ie. only one is true
         if (curr == free_list_ptr && passCount != 0) {
@@ -116,8 +120,11 @@ void *sal_malloc(u_int32_t n) {
         }
 
 
-        //Case if region is sufficiently large    
+        //Case if region is sufficiently large
+        currSize = toPointer(curr)->size;   
+        printf("currSize %d\n", currSize); 
         if (toPointer(curr)->size >= n && toPointer(curr)->size < oldSize) {
+            currSize = toPointer(curr)->size;    
             regionFound = 1;          //try to go through the whole list and find the smallest one that is large enough
             printf("regionFound = %d\n", regionFound);
             region = curr; //change curr to region below so that curr can keep searching for a better (smaller) region and still have it stored
@@ -128,26 +135,40 @@ void *sal_malloc(u_int32_t n) {
 
         //Increment passCount
         passCount++;
-        //printf("passCount = %d, regionFound = %d, curr = %p, curr->next = %p\n", passCount, regionFound, toPointer(curr), toPointer(curr));
-    } 
-    //printf("loop escaped\n");
+        printf("passCount = %d, regionFound = %d, curr = %p, curr->next = %p\n", passCount, regionFound, toPointer(curr), toPointer(curr));
+    } while (regionFound == 0 && curr != free_list_ptr);
+    printf("loop1 escaped\n");
 
+    if (regionFound == 0) {
+        fprintf(stderr, "sal_malloc: insufficient memory 2\n");
+        return NULL;
+    }
+
+    int j = 0;
+    sal_stats();
+    printf("j = %d,: entering loop \n", j);
     //Divide segment of memory into smallest possible size
     while (toPointer(region)->size >= 2 * n) { //so it only splits if its more than twice the size, otherwise it will be too small
+        printf("j = %d, ", j);
         region = memoryDivide(region);
+        j++;
+        printf("j = %d, ", j);
     }
-    //printf("loop escaped\n");
+    printf("loop2 escaped\n");
 
     //Remove region from the free list
     region = enslaveRegion(region);
     //printf("region = %d, HEADER_SIZE = %d, toIndex(toPointer(region) + HEADER_SIZE) = %d, toIndex(toPointer(region) = %d\n", region, HEADER_SIZE, toIndex(toPointer(region) + 1), toIndex(toPointer(region)));
 
     //Return pointer to the first byte AFTER the region header
+    printf("sal_malloc exited\n");
+    sal_stats();
     return (void *)(toPointer(region) + 1);
 }
 
 void sal_free(void *object) {
 
+    printf("sal_free entered\n");
     //As object points to memory AFTER the header, go back to start of header
     sal_stats();
     object = object - HEADER_SIZE;
@@ -185,6 +206,8 @@ void sal_free(void *object) {
 
     //Attempt to merge adjacent regions
     merge();
+
+    printf("sal_free exited\n");
 }
 
 //Terminate the suballocator - must sal_init to use again
@@ -244,7 +267,7 @@ vlink_t toIndex(free_header_t* pointer) {
 //Splits the region of memory passed in into two
 vlink_t memoryDivide(vlink_t curr) {
 
-    printf("memoryDivide entered\n\n\n");
+    printf("memoryDivide entered\n");
 
     //sal_stats();
 
@@ -280,7 +303,7 @@ vlink_t memoryDivide(vlink_t curr) {
     //Now curr points to new and vice versa
 
     //sal_stats();
-    printf("memoryDivide exit\n\n\n");
+    printf("memoryDivide exit\n");
     return curr;
 }
 
@@ -314,6 +337,7 @@ vlink_t enslaveRegion(vlink_t curr) {
 }
 
 void merge(void) {
+    printf("merge entered\n");
    //set to next so you can loop until its found again
     vlink_t object = free_list_ptr;
     int pass = 0;
@@ -346,7 +370,8 @@ void merge(void) {
 */
     free_list_ptr = object;
     //recurses to check if another set can be merged, starts at new position
-    merge();
+    //merge();
+    printf("merge exited\n");
     return;
 }
 
@@ -364,7 +389,7 @@ void printHeaders(void) {
         printf("curr->size: %d\n", toPointer(curr)->size);    
         printf("curr->next: %d\n", toPointer(curr)->next);  
         printf("curr->prev: %d\n\n", toPointer(curr)->prev); 
-
+        printf("#############################################################################\n");
         //Move along
         curr = toPointer(curr)->next;
     } while (curr != free_list_ptr);
