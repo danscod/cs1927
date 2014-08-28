@@ -99,7 +99,7 @@ void *sal_malloc(u_int32_t n) {
     //Boolean variable to identify if a suitable region has been found     
     int regionFound = 0;    
     while ((regionFound == 0 || curr != free_list_ptr) && !(regionFound == 0 && curr != free_list_ptr)) {//go until you get back to the start and a region is found
-        printf("passCount = %d, regionFound = %d, curr = %p, curr->next = %p\n", passCount, regionFound, toPointer(curr), toPointer(curr));
+        //printf("passCount = %d, regionFound = %d, curr = %p, curr->next = %p\n", passCount, regionFound, toPointer(curr), toPointer(curr));
 
         //Ensure that loop will halt next time it reaches start //please check the line ^ -- it should loop if A || B is true and A && B is not true ie. only one is true
         if (curr == free_list_ptr && passCount != 0) {
@@ -128,9 +128,9 @@ void *sal_malloc(u_int32_t n) {
 
         //Increment passCount
         passCount++;
-        printf("passCount = %d, regionFound = %d, curr = %p, curr->next = %p\n", passCount, regionFound, toPointer(curr), toPointer(curr));
+        //printf("passCount = %d, regionFound = %d, curr = %p, curr->next = %p\n", passCount, regionFound, toPointer(curr), toPointer(curr));
     } 
-    printf("loop escaped\n");
+    //printf("loop escaped\n");
 
     //Divide segment of memory into smallest possible size
     while (toPointer(region)->size >= 2 * n) { //so it only splits if its more than twice the size, otherwise it will be too small
@@ -140,15 +140,18 @@ void *sal_malloc(u_int32_t n) {
 
     //Remove region from the free list
     region = enslaveRegion(region);
+    //printf("region = %d, HEADER_SIZE = %d, toIndex(toPointer(region) + HEADER_SIZE) = %d, toIndex(toPointer(region) = %d\n", region, HEADER_SIZE, toIndex(toPointer(region) + 1), toIndex(toPointer(region)));
 
     //Return pointer to the first byte AFTER the region header
-    return (void *)(toPointer(region) + HEADER_SIZE);
+    return (void *)(toPointer(region) + 1);
 }
 
-void sal_free(void *object)
-{
+void sal_free(void *object) {
+
     //As object points to memory AFTER the header, go back to start of header
+    sal_stats();
     object = object - HEADER_SIZE;
+    sal_stats();
     //object = (free_header_t *)object;
 
     //Get the index for object
@@ -243,40 +246,40 @@ vlink_t memoryDivide(vlink_t curr) {
 
     printf("memoryDivide entered\n\n\n");
 
-    sal_stats();
+    //sal_stats();
 
     //Create temporary vlink
     vlink_t temp = curr;              
-    printf("currP = %p, curr = %d, curr->next = %p, free_list_ptr = %d, temp = %d\n", toPointer(curr), curr, toPointer(curr), free_list_ptr, temp);
-    printf("temp = %d, toPointer(temp) = %p, toIndex(toPointer(temp)) = %d\n\n", temp, toPointer(temp), toIndex(toPointer(temp)));
+    //printf("currP = %p, curr = %d, curr->next = %p, free_list_ptr = %d, temp = %d\n", toPointer(curr), curr, toPointer(curr), free_list_ptr, temp);
+    //printf("temp = %d, toPointer(temp) = %p, toIndex(toPointer(temp)) = %d\n\n", temp, toPointer(temp), toIndex(toPointer(temp)));
     //Progress temp to the new divided region
     temp = temp + ((toPointer(curr)->size) / 2);
-    printf("temp = %d, toPointer(temp) = %p, toIndex(toPointer(temp)) = %d\n\n", temp, toPointer(temp), toIndex(toPointer(temp)));
+    //printf("temp = %d, toPointer(temp) = %p, toIndex(toPointer(temp)) = %d\n\n", temp, toPointer(temp), toIndex(toPointer(temp)));
 
 
     //Setup the new region header
     free_header_t *new = toPointer(temp);
-    printf("\ntoPointer(curr)->size = %d, toIndex(new) = %d, new = %p\n\n", toPointer(curr)->size, toIndex(new), new);
+    //printf("\ntoPointer(curr)->size = %d, toIndex(new) = %d, new = %p\n\n", toPointer(curr)->size, toIndex(new), new);
     new->size = toPointer(curr)->size / 2;
-    printf("new->size = %d\n", new->size);
+    //printf("new->size = %d\n", new->size);
     new->magic = MAGIC_FREE;
 
     //Shrink the old region
     toPointer(curr)->size = (toPointer(curr)->size) / 2;
-    printf("toPointer(curr)->size = %d\n", toPointer(curr)->size);
+    //printf("toPointer(curr)->size = %d\n", toPointer(curr)->size);
 
-    printf("new->next = %d, new->prev = %d, curr->next = %d, curr->prev = %d\n", new->next, new->prev, toPointer(curr)->next, toPointer(curr)->prev);
+    //printf("new->next = %d, new->prev = %d, curr->next = %d, curr->prev = %d\n", new->next, new->prev, toPointer(curr)->next, toPointer(curr)->prev);
     //Link the new regions to the old ones (and vice versa)
     toPointer(toPointer(curr)->next)->prev = toIndex(new);
     new->next = toPointer(curr)->next;        
-    printf("new->next = %d, new->prev = %d, curr->next = %d, curr->prev = %d\n", new->next, new->prev, toPointer(curr)->next, toPointer(curr)->prev);
+    //printf("new->next = %d, new->prev = %d, curr->next = %d, curr->prev = %d\n", new->next, new->prev, toPointer(curr)->next, toPointer(curr)->prev);
     //Now new points to the old curr->next and vice versa
     toPointer(curr)->next = toIndex(new);
     new->prev = curr; 
-    printf("new->next = %d, new->prev = %d, curr->next = %d, curr->prev = %d\n", new->next, new->prev, toPointer(curr)->next, toPointer(curr)->prev);                                                                                                              ///this looks suss
+    //printf("new->next = %d, new->prev = %d, curr->next = %d, curr->prev = %d\n", new->next, new->prev, toPointer(curr)->next, toPointer(curr)->prev);                                                                                                              ///this looks suss
     //Now curr points to new and vice versa
 
-    sal_stats();
+    //sal_stats();
     printf("memoryDivide exit\n\n\n");
     return curr;
 }
@@ -299,11 +302,11 @@ vlink_t enslaveRegion(vlink_t curr) {
     toPointer(curr)->next = curr;
     toPointer(curr)->prev = curr;
 
-    sal_stats();
-    printf("curr = %p, curr->next = %p, free_list_ptr = %d\n", toPointer(curr), toPointer(curr), free_list_ptr);
+    //sal_stats();
+    //printf("curr = %p, curr->next = %p, free_list_ptr = %d\n", toPointer(curr), toPointer(curr), free_list_ptr);
 
 
-    sal_stats();
+    //sal_stats();
 
     printf("enslaveRegion exit\n");
 
