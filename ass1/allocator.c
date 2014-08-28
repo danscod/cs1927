@@ -105,7 +105,7 @@ void *sal_malloc(u_int32_t n) {
 
         //Print error message if region accessed has already been allocated 
         //(and should therefore have been removed from free list);
-        if (curr->magic != MAGIC_FREE) {
+        if (toPointer(curr)->magic != MAGIC_FREE) {
             fprintf(stderr, "Memory corruption\n");
             sal_stats();
             abort();
@@ -113,11 +113,11 @@ void *sal_malloc(u_int32_t n) {
 
 
         //Case if region is sufficiently large    
-        if (curr->size) >= n) { //this is just going to pick the first region large enough and split it
+        if (toPointer(curr)->size) >= n) { //this is just going to pick the first region large enough and split it
             regionFound = 1;          //try to go through the whole list and find the smallest one that is large enough
         //Case if region is not large enough
         } else {
-            curr = memory[curr->next]; //ive changed it so that curr is a pointer that can be changed, but moving it just becomes an index
+            curr = toPointer(curr)->next;
         }
 
         //Increment passCount
@@ -141,7 +141,29 @@ void *sal_malloc(u_int32_t n) {
 
 void sal_free(void *object)
 {
-   // TODO
+    //As object points to memory AFTER the header, go back to start of header
+    object = (byte *)object - HEADER_SIZE;
+
+    //Ensure the region is not already free
+    assert(object->magic == MAGIC_ALLOC);
+
+    //Find where in the list the object belongs
+    vlink_t curr = free_list_ptr; //this will only work if free_list_ptr is before object -- you need to go through the list to find the lowest value
+    while (curr < object) {
+        curr = toPointer(curr)->next;
+    }
+
+    //Insert object back into the list
+    object->next = curr;
+    object->prev = toPointer(curr)->prev;
+    toPointer(toPointer(curr)->prev)->next = toIndex(object); //dont know if this line works
+    curr.prev = toIndex(object);
+
+    //Change status of region to FREE
+    object->magic = MAGIC_FREE;
+
+    //Attempt to merge adjacent regions
+    merge();
 }
 
 //Terminate the suballocator - must sal_init to use again
@@ -242,6 +264,38 @@ vlink_t enslaveRegion(vlink_t curr) {
 }
 
 void merge(void) {
+   //set to next so you can loop until its found again
+    free_header_t object = free_list_ptr;
+    object = toPointer(object)->next
+    //loop until adjacent regions of equal size are found
+    while (toPointer(toPointer(object)->next)->size != toPointer(object)->size) {
+        //ends if it goes through whole list
+        if (object == free_list_ptr) {
+            return;
+        }
+        object = toPointer(object)->next;
+        //double checking the list
+        if (toPointer(object)->magic != MAGIC_FREE) {
+            printf("Non-free region in list/ corruption");
+            exit(1);
+        }
+    }
+    //check whether to merge with next
+    if (object % (toPointer(object)->size * 2) == 0) {
+      object.size = object.size * 2;
+      toPointer(toPointer(object.next).next).prev = toIndex(object);
+      object.next = toPointer(object.next).next;
+    }
+/*    else {
+        object = object->prev;
+        object->size = object->size * 2;
+        object->next->next->prev = object;
+        object->next = object->next->next;
+    }
+*/
+    free_list_ptr = object;
+    //recurses to check if another set can be merged
+    merge();
     return;
 }
 
