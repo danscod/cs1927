@@ -286,6 +286,10 @@ vlink_t enslaveRegion(vlink_t curr) {
 
     printf("enslaveRegion entered\n");
 
+    //If the enslaved region is the same as free_list_ptr, move it
+    if (curr == free_list_ptr) {
+        free_list_ptr = toPointer(curr)->next;
+    }
     //Mark header as allocated
     toPointer(curr)->magic = MAGIC_ALLOC;
     //Change neighbour's links to skip the enslaved region
@@ -298,10 +302,6 @@ vlink_t enslaveRegion(vlink_t curr) {
     sal_stats();
     printf("curr = %p, curr->next = %p, free_list_ptr = %d\n", toPointer(curr), toPointer(curr), free_list_ptr);
 
-    //If the enslaved region is the same as free_list_ptr, move it
-    if (curr == free_list_ptr) {
-        free_list_ptr = toPointer(free_list_ptr)->next;
-    }
 
     sal_stats();
 
