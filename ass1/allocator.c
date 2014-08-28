@@ -105,7 +105,7 @@ void *sal_malloc(u_int32_t n) {
 
         //Print error message if region accessed has already been allocated 
         //(and should therefore have been removed from free list);
-        if (toPointer(curr)->magic != MAGIC_FREE) {
+        if (curr->magic != MAGIC_FREE) {
             fprintf(stderr, "Memory corruption\n");
             sal_stats();
             abort();
@@ -113,11 +113,11 @@ void *sal_malloc(u_int32_t n) {
 
 
         //Case if region is sufficiently large    
-        if ((toPointer(curr)->size) >= n) { //this is just going to pick the first region large enough and split it
+        if (curr->size) >= n) { //this is just going to pick the first region large enough and split it
             regionFound = 1;          //try to go through the whole list and find the smallest one that is large enough
         //Case if region is not large enough
         } else {
-            curr = toPointer(curr)->next;
+            curr = memory[curr->next]; //ive changed it so that curr is a pointer that can be changed, but moving it just becomes an index
         }
 
         //Increment passCount

@@ -63,16 +63,16 @@ void sal_init(u_int32_t size) {
     }
 
     //set global variables | size and initial location of free list
-    free_list_ptr = memory[0]; //index of header of initial block
+    free_list_ptr = 0; //index of header of initial block
     memory_size = n;
 
     //this is dodge???
     //set first free list pointer
-    free_header_t *T = (free_header_t *)memory;                                  
-    T->magic = MAGIC_FREE;
-    T->size = n;
-    T->next = 0;                                                                
-    T->prev = 0;
+    free_header_t T;                               
+    T.magic = MAGIC_FREE;
+    T.size = n;
+    T.next = 0;                                                                
+    T.prev = 0;
 }
 
 //Malloc for the program above but using the suballocated region instead
@@ -104,18 +104,18 @@ void *sal_malloc(u_int32_t n) {
 
         //Print error message if region accessed has already been allocated 
         //(and should therefore have been removed from free list);
-        if (toPointer(curr).magic != MAGIC_FREE) {
+        if (curr->magic != MAGIC_FREE) {
             fprintf(stderr, "Memory corruption");
             abort();
         }
 
 
         //Case if region is sufficiently large    
-        } else if ((toPointer(curr).size) >= n) { //this is just going to pick the first region large enough and split it
+        } else if (curr->size) >= n) { //this is just going to pick the first region large enough and split it
             regionFound = 1;          //try to go through the whole list and find the smallest one that is large enough
         //Case if region is not large enough
         } else {
-            curr = toPointer(curr).next;
+            curr = memory[curr->next];
         }
 
         //Increment passCount
@@ -123,8 +123,8 @@ void *sal_malloc(u_int32_t n) {
     }
 
     //Divide segment of memory into smallest possible size
-    while (toPointer(curr).size >= 2 * n) { //so it only splits if its more than twice the size, otherwise it will be too small
-        curr = memoryDivide(vlink_t curr);
+    while (curr->size >= 2 * n) { //so it only splits if its more than twice the size, otherwise it will be too small
+        curr = memoryDivide(curr);
     }
 
     //Remove region from the free list
@@ -146,15 +146,15 @@ void sal_free(void *object) {
 
     //Find where in the list the object belongs
     vlink_t curr = free_list_ptr; //this will only work if free_list_ptr is before object -- you need to go through the list to find the lowest value
-    while (toPointer(curr) < object) {
-        curr = toPointer(curr).next;
+    while (curr < object) {
+        curr = memory[curr->next];
     }
 
     //Insert object back into the list
-    object->next = toPointer(curr).next;
-    object->prev = toPointer(curr).prev; //one of these should be " = curr " (i think) draw it, youll end up skipping one
-    toPointer(curr).prev.next = object;
-    toPointer(curr).prev = object;
+    object->next = curr->next;
+    object->prev = curr->prev; //one of these should be " = curr " (i think) draw it, youll end up skipping one
+    memory[curr->prev]->next = (byte *)object - (byte *)memory;
+    curr->prev = (byte *)object - (byte *)memory;
 
     //Change status of region to FREE
     object->magic = MAGIC_FREE;
@@ -187,9 +187,9 @@ void sal_stats(void) {
     int passCount = 0;
     printf("List:\n");
     while (curr != free_list_ptr || passCount == 0) {
-        printf("i = %d, curr.size: %d, curr index: %d, curr pointer: %p\n", passCount, toPointer(curr).size, curr, toPointer(curr));
+        printf("i = %d, curr.size: %d, curr index: %d, curr pointer: %p\n", passCount, curr->size, curr - memory, curr);
         passCount++;
-        curr = curr->next;
+        curr = memory[curr->next];
     }
 
 }
@@ -212,13 +212,13 @@ u_int32_t sizeToN(u_int32_t size) {
 }
 
 //Splits the region of memory passed in into two
-vlink_t memoryDivide(vlink_t curr) {
+vlink_t memoryDivide(vlink_t *curr) {
 
     //Create temporary vlink
-    vlink_t temp = curr;              
+    vlink_t temp = *curr;
 
     //Progress temp to the new divided region
-    temp = temp + (toPointer(curr).size) / 2;
+    temp = (byte *)temp + curr->size / 2;
 
     //Setup the new region header
     free_header_t new = toPointer(temp);
