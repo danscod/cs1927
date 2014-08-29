@@ -68,7 +68,6 @@ void sal_init(u_int32_t size) {
     free_list_ptr = 0; //index of header of initial block
     memory_size = n;
 
-    //this is dodge???
     //set first free list pointer
     free_header_t *T = (free_header_t *)memory;                                  
     T->magic = MAGIC_FREE;
@@ -181,7 +180,6 @@ void sal_free(void *object) {
     //Ensure the region is not already free
     assert(toPointer(objectIndex)->magic == MAGIC_ALLOC);
 
-    //Find where in the list the object belongs
     vlink_t temp = toPointer(free_list_ptr)->next;
     vlink_t curr = temp;
     while (temp != free_list_ptr){
@@ -190,23 +188,44 @@ void sal_free(void *object) {
         }
         temp = toPointer(temp)->next;
     }
+    //printf("%d\n", curr);
     //curr is now the lowest position in free list
+//Find where in the list the object belongs -- the problem is in finding where the object goes in the list
     while (curr < objectIndex) {
         curr = toPointer(curr)->next;
+        //printf("%d\n", objectIndex);
+        if (curr == free_list_ptr){
+           break;
+        }
     }
-
+    //make a new header
+    free_header_t *T = (free_header_t *)object;                                  
+    T->magic = MAGIC_FREE;
+    T->size = 64; //dont know how to find the size of the object were freeing
+    T->next = curr;                                                                
+    T->prev = toPointer(curr)->prev;
     //Insert object back into the list
-    toPointer(objectIndex)->next = curr;
-    toPointer(objectIndex)->prev = toPointer(curr)->prev;
+    //toPointer(objectIndex)->next = curr;
+    //toPointer(objectIndex)->prev = toPointer(curr)->prev;
     toPointer(toPointer(curr)->prev)->next = objectIndex; //dont know if this line works (like syntax wise)
     toPointer(curr)->prev = objectIndex;
-
+    
     //Change status of region to FREE
-    toPointer(objectIndex)->magic = MAGIC_FREE;
-
+    //toPointer(objectIndex)->magic = MAGIC_FREE;
+    //printf("merge is whats stuck\n");
     //Attempt to merge adjacent regions
+    temp = toPointer(free_list_ptr)->next;
+    while (temp != free_list_ptr){
+        if (toPointer(temp)->magic != MAGIC_FREE) {
+                printf("Non-free region in list/ corruption000014\n");
+        }
+        temp = toPointer(temp)->next;
+    }
+    if (toPointer(free_list_ptr)->magic != MAGIC_FREE){
+       printf("wank\n");
+    }
+    printf("exit loop -- swag\n");
     merge();
-
     printf("sal_free exited\n");
 }
 
@@ -229,7 +248,7 @@ void sal_stats(void) {
     printf("Global Variable 'free_list_ptr' is: %d\n", free_list_ptr);
     printf("Global Variable 'memory_size' is: %d\n\n", memory_size);
     
-    printHeaders();
+    //printHeaders();
 }
 
 
@@ -337,39 +356,63 @@ vlink_t enslaveRegion(vlink_t curr) {
 }
 
 void merge(void) {
+    static int debug = 1;
     printf("merge entered\n");
    //set to next so you can loop until its found again
-    vlink_t object = free_list_ptr;
+    //vlink_t object = free_list_ptr;
     int pass = 0;
     //loop until adjacent regions of equal size are found
+    vlink_t object = toPointer(free_list_ptr)->next;
+    while (object != free_list_ptr){
+        if (toPointer(object)->magic != MAGIC_FREE) {
+                printf("Non-free region in list/ corruption13\n");
+        }
+        object = toPointer(object)->next;
+    }
     while (toPointer(toPointer(object)->next)->size != toPointer(object)->size) {
         //ends if it goes through whole list
         if (object == free_list_ptr && pass == 1) {
-            return;
+            printf("merge exited -- swag style\n");
+            return;;
         }
-        //double checking the list
+        //double checking the list -- problem here for some reason
         if (toPointer(object)->magic != MAGIC_FREE) {
-            printf("Non-free region in list/ corruption");
-            exit(1);
+            printf("Non-free region in list for some reason\n");
+            printf("%d\n", debug);
         }
         object = toPointer(object)->next;
         pass = 1;
     }
-    //check whether to merge with next
+    debug++;
+    //check whether to merge with next or prev -- could be a problem here
+    printf("after loop\n");
     if (object % (toPointer(object)->size * 2) == 0) {
       toPointer(object)->size = toPointer(object)->size * 2;
       toPointer(toPointer(toPointer(object)->next)->next)->prev = object;
       toPointer(object)->next = toPointer(toPointer(object)->next)->next;
     }
-/*    else {
-        object = object->prev;
-        object->size = object->size * 2;
-        object->next->next->prev = object;
-        object->next = object->next->next;
+/*  else {
+        object = toPointer(object)->prev;
+        toPointer(object)->size = toPointer(object)->size * 2;
+        toPointer(toPointer(toPointer(object)->next)->next)->prev = object;
+        toPointer(object)->next = toPointer(toPointer(object)->next)->next;
     }
 */
-    free_list_ptr = object;
+    free_list_ptr = toPointer(object)->next;
     //recurses to check if another set can be merged, starts at new position
+    printf("merge exited (not really)\n");
+    while (object == free_list_ptr && pass == 0) {
+        //ends if it goes through whole list
+        if (object == free_list_ptr && pass == 1) {
+            printf("merge exited -- swag style 2\n");
+            return;
+        }
+        if (toPointer(toPointer(object)->next)->size != toPointer(object)->size){
+           merge();
+        }
+        object = toPointer(object)->next;
+        pass = 0;
+    }
     //merge();
     printf("merge exited\n");
     return;
