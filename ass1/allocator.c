@@ -90,6 +90,10 @@ void *sal_malloc(u_int32_t n) {
     //Round n to nearest upper power of two, including the header
     n = sizeToN(n + HEADER_SIZE);
 
+    if (toPointer(curr)->next == toPointer(curr)->prev && n < 2 * toPointer(curr)->size){
+        return NULL;
+    }
+
 /*
     //Check if the allocator is large enough
     if (n > memory_size) {
