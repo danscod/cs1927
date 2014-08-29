@@ -168,7 +168,7 @@ void *sal_malloc(u_int32_t n) {
 
 void sal_free(void *object) {
 
-    //printf("sal_free entered\n");
+    printf("sal_free entered\n");
     //As object points to memory AFTER the header, go back to start of header
     //sal_stats();
     object = object - HEADER_SIZE;
@@ -202,7 +202,7 @@ void sal_free(void *object) {
     //make a new header
     free_header_t *T = (free_header_t *)object;                                  
     T->magic = MAGIC_FREE;
-    T->size = 64; //dont know how to find the size of the object were freeing
+    T->size = toPointer(objectIndex)->size; //dont know how to find the size of the object were freeing
     T->next = curr;                                                                
     T->prev = toPointer(curr)->prev;
     //Insert object back into the list
@@ -227,7 +227,7 @@ void sal_free(void *object) {
     }
     //printf("exit loop -- swag\n");
     //merge();
-    //printf("sal_free exited\n");
+    printf("sal_free exited\n");
 }
 
 //Terminate the suballocator - must sal_init to use again

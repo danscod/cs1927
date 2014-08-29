@@ -16,9 +16,10 @@
 + m 200  // 256  3904
 + n 100  // 128  4032
 + o 10   // 32   4064
-+ p 10   // this one should fail.
+
 ! //a block of 32BYTES left
 - d
+!
 - a
 - b
 - c
