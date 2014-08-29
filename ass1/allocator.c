@@ -200,11 +200,10 @@ void sal_free(void *object) {
         }
     }
     //make a new header
-    free_header_t *T = (free_header_t *)object;                                  
-    T->magic = MAGIC_FREE;
-    T->size = 64; //dont know how to find the size of the object were freeing
-    T->next = curr;                                                                
-    T->prev = toPointer(curr)->prev;
+    //free_header_t *T = (free_header_t *)object;                                  
+    object->magic = MAGIC_FREE;
+    object->next = curr;                                                                
+    object->prev = toPointer(curr)->prev;
     //Insert object back into the list
     //toPointer(objectIndex)->next = curr;
     //toPointer(objectIndex)->prev = toPointer(curr)->prev;
@@ -359,7 +358,7 @@ vlink_t enslaveRegion(vlink_t curr) {
 void merge(void) {
     static int debug = 1;
     //printf("merge entered\n");
-   //set to next so you can loop until its found again
+    //set to next so you can loop until its found again
     //vlink_t object = free_list_ptr;
     int pass = 0;
     //loop until adjacent regions of equal size are found
