@@ -195,7 +195,7 @@ void sal_free(void *object) {
     }
     //printf("%d\n", curr);
     //curr is now the lowest position in free list
-//Find where in the list the object belongs -- the problem is in finding where the object goes in the list
+    //Find where in the list the object belongs -- the problem is in finding where the object goes in the list
     while (curr < objectIndex) {
         curr = toPointer(curr)->next;
         //printf("%d\n", objectIndex);
@@ -204,16 +204,26 @@ void sal_free(void *object) {
         }
     }
     //make a new header
-    //free_header_t *T = (free_header_t *)object;                                  
-    object->magic = MAGIC_FREE;
-    object->next = curr;                                                                
-    object->prev = toPointer(curr)->prev;
-    //Insert object back into the list
-    //toPointer(objectIndex)->next = curr;
-    //toPointer(objectIndex)->prev = toPointer(curr)->prev;
-    toPointer(toPointer(curr)->prev)->next = objectIndex; //dont know if this line works (like syntax wise)
-    toPointer(curr)->prev = objectIndex;
-    
+    //free_header_t *T = (free_header_t *)object;             
+    if (curr != free_list_ptr){
+        //insert after
+        object->magic = MAGIC_FREE;
+        object->next = curr;                                                                
+        object->prev = toPointer(curr)->prev;
+        //Insert object back into the list
+        //toPointer(objectIndex)->next = curr;
+        //toPointer(objectIndex)->prev = toPointer(curr)->prev;
+        toPointer(toPointer(curr)->prev)->next = objectIndex;
+        toPointer(curr)->prev = objectIndex;
+    } else { //please check this works
+        //insert before
+        object->magic = MAGIC_FREE;
+        object->prev = curr;                                                                
+        object->next = toPointer(curr)->next;
+        toPointer(toPointer(curr)->next)->prev = objectIndex;
+        toPointer(curr)->next = objectIndex;
+    }
+       
     //Change status of region to FREE
     //toPointer(objectIndex)->magic = MAGIC_FREE;
     //printf("merge is whats stuck\n");
@@ -395,13 +405,14 @@ void merge(void) {
       toPointer(toPointer(toPointer(object)->next)->next)->prev = object;
       toPointer(object)->next = toPointer(toPointer(object)->next)->next;
     }
-/*  else {
-        object = toPointer(object)->prev;
+  else {
+/*        object = toPointer(object)->prev;
         toPointer(object)->size = toPointer(object)->size * 2;
         toPointer(toPointer(toPointer(object)->next)->next)->prev = object;
         toPointer(object)->next = toPointer(toPointer(object)->next)->next;
+*/      return; 
     }
-*/
+
     free_list_ptr = toPointer(object)->next;
     //recurses to check if another set can be merged, starts at new position
     //printf("merge exited (not really)\n");
