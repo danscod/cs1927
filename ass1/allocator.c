@@ -226,7 +226,7 @@ void sal_free(void *object) {
        printf("wank\n");
     }
     //printf("exit loop -- swag\n");
-    merge();
+    //merge();
     printf("sal_free exited\n");
 }
 
@@ -357,9 +357,8 @@ vlink_t enslaveRegion(vlink_t curr) {
 }
 
 void merge(void) {
-
     static int debug = 1;
-    printf("merge entered\n");
+    //printf("merge entered\n");
    //set to next so you can loop until its found again
     //vlink_t object = free_list_ptr;
     int pass = 0;
@@ -371,7 +370,6 @@ void merge(void) {
         }
         object = toPointer(object)->next;
     }
-    printf("loop 1 passed\n");
     while (toPointer(toPointer(object)->next)->size != toPointer(object)->size) {
         //ends if it goes through whole list
         if (object == free_list_ptr && pass == 1) {
@@ -386,7 +384,6 @@ void merge(void) {
         object = toPointer(object)->next;
         pass = 1;
     }
-    printf("loop 2 passed\n");
     debug++;
     //check whether to merge with next or prev -- could be a problem here
     //printf("after loop\n");
@@ -417,11 +414,9 @@ void merge(void) {
         object = toPointer(object)->next;
         pass = 0;
     }
-    printf("loop 3 passed\n");
     //merge();
-    printf("merge exited\n");
+    //printf("merge exited\n");
     return;
-
 }
 
 //print out all headers 

@@ -52,7 +52,7 @@ void sal_stats2 (void * alpha[26]) {
     // initilise size lists
     for (i=0; i<26; i++) {
         free_sizes[i][0]= '\0';
-        alloc_sizes[i][0]= '\0'; 
+        alloc_sizes[i][0]= '\0';
     }
 
     // Fill graph with free memory
