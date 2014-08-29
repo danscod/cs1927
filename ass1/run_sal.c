@@ -61,7 +61,6 @@ int main(int argc, char *argv[])
             fprintf(stderr, "Attempt to alloc over already allocated pointer\n");
          else {
             Byte *b = sal_malloc(val);
-            printf("b has been malloc, equal to val =%p\n", b);
             if (b == NULL)
                fprintf(stderr, "Failed to allocate %d bytes for ptr[%c]\n", val, var);
             else {
@@ -86,12 +85,9 @@ int main(int argc, char *argv[])
          if (ptr[var-'a'] == NULL)
             fprintf(stderr, "Attempt to write via unallocated pointer\n");
          else {
-            printf("run_sal attempting to assign\n"); //MUST REMOVE
-            sal_stats();   //MUST REMOVE
             Byte *x = ptr[var-'a'];
             *x = (Byte)val;
             if (!quiet) printf("Memory at %p assigned %d\n", x, *x);
-            sal_stats();   //MUST REMOVE
          }
       }
       else if (line[0] == '?') {
@@ -106,7 +102,7 @@ int main(int argc, char *argv[])
          printf("       and   N is an integer value\n");
       }
       else if (line[0] == '!') {
-         sal_stats();
+         sal_stats2(ptr);
       }
       else if (line[0] == 'q') {
          break;

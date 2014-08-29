@@ -50,6 +50,6 @@ void sal_end(void);
 // Precondition: allocator has been sal_init()'d
 // Postcondition: allocator stats displayed on stdout
 
-void sal_stats(void);
+void sal_stats(void); void sal_stats2(void * alpha[26]);
 
 #endif
