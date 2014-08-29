@@ -90,10 +90,6 @@ void *sal_malloc(u_int32_t n) {
     //Round n to nearest upper power of two, including the header
     n = sizeToN(n + HEADER_SIZE);
 
-    if (toPointer(curr)->next == toPointer(curr)->prev && n > toPointer(curr)->size / 2){
-        return NULL;
-    }
-
 /*
     //Check if the allocator is large enough
     if (n > memory_size) {
@@ -172,7 +168,7 @@ void *sal_malloc(u_int32_t n) {
 
 void sal_free(void *object) {
 
-    //printf("sal_free entered\n");
+    printf("sal_free entered\n");
     //As object points to memory AFTER the header, go back to start of header
     //sal_stats();
     object = object - HEADER_SIZE;
@@ -195,7 +191,7 @@ void sal_free(void *object) {
     }
     //printf("%d\n", curr);
     //curr is now the lowest position in free list
-    //Find where in the list the object belongs -- the problem is in finding where the object goes in the list
+//Find where in the list the object belongs -- the problem is in finding where the object goes in the list
     while (curr < objectIndex) {
         curr = toPointer(curr)->next;
         //printf("%d\n", objectIndex);
@@ -204,26 +200,17 @@ void sal_free(void *object) {
         }
     }
     //make a new header
-    //free_header_t *T = (free_header_t *)object;             
-    if (curr != free_list_ptr){
-        //insert after
-        toPointer(objectIndex)->magic = MAGIC_FREE;
-        toPointer(objectIndex)->next = curr;                                                                
-        toPointer(objectIndex)->prev = toPointer(curr)->prev;
-        //Insert object back into the list
-        //toPointer(objectIndex)->next = curr;
-        //toPointer(objectIndex)->prev = toPointer(curr)->prev;
-        toPointer(toPointer(curr)->prev)->next = objectIndex;
-        toPointer(curr)->prev = objectIndex;
-    } else { //please check this works
-        //insert before
-        toPointer(objectIndex)->magic = MAGIC_FREE;
-        toPointer(objectIndex)->prev = curr;                                                                
-        toPointer(objectIndex)->next = toPointer(curr)->next;
-        toPointer(toPointer(curr)->next)->prev = objectIndex;
-        toPointer(curr)->next = objectIndex;
-    }
-       
+    free_header_t *T = (free_header_t *)object;                                  
+    T->magic = MAGIC_FREE;
+    T->size = toPointer(objectIndex)->size; //dont know how to find the size of the object were freeing
+    T->next = curr;                                                                
+    T->prev = toPointer(curr)->prev;
+    //Insert object back into the list
+    //toPointer(objectIndex)->next = curr;
+    //toPointer(objectIndex)->prev = toPointer(curr)->prev;
+    toPointer(toPointer(curr)->prev)->next = objectIndex; //dont know if this line works (like syntax wise)
+    toPointer(curr)->prev = objectIndex;
+    
     //Change status of region to FREE
     //toPointer(objectIndex)->magic = MAGIC_FREE;
     //printf("merge is whats stuck\n");
@@ -240,7 +227,7 @@ void sal_free(void *object) {
     }
     //printf("exit loop -- swag\n");
     //merge();
-    //printf("sal_free exited\n");
+    printf("sal_free exited\n");
 }
 
 //Terminate the suballocator - must sal_init to use again
@@ -372,7 +359,7 @@ vlink_t enslaveRegion(vlink_t curr) {
 void merge(void) {
     static int debug = 1;
     //printf("merge entered\n");
-    //set to next so you can loop until its found again
+   //set to next so you can loop until its found again
     //vlink_t object = free_list_ptr;
     int pass = 0;
     //loop until adjacent regions of equal size are found
@@ -405,14 +392,13 @@ void merge(void) {
       toPointer(toPointer(toPointer(object)->next)->next)->prev = object;
       toPointer(object)->next = toPointer(toPointer(object)->next)->next;
     }
-  else {
-/*        object = toPointer(object)->prev;
+/*  else {
+        object = toPointer(object)->prev;
         toPointer(object)->size = toPointer(object)->size * 2;
         toPointer(toPointer(toPointer(object)->next)->next)->prev = object;
         toPointer(object)->next = toPointer(toPointer(object)->next)->next;
-*/      return; 
     }
-
+*/
     free_list_ptr = toPointer(object)->next;
     //recurses to check if another set can be merged, starts at new position
     //printf("merge exited (not really)\n");

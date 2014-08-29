@@ -1,0 +1,8 @@
++ a 100       // allocate 100 bytes, referenced by a (e.g. a = malloc(100))
++ b 50        // allocate 50 bytes, referenced by b (e.g. a = malloc(100))
++ c 75
++ d 125
++ e 45
++ f 225
+!
+q             // quit the run_sal program
