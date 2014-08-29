@@ -176,6 +176,7 @@ void sal_free(void *object) {
     //As object points to memory AFTER the header, go back to start of header
     //sal_stats();
     object = object - HEADER_SIZE;
+
     //sal_stats();
     //object = (free_header_t *)object;
 
@@ -205,24 +206,14 @@ void sal_free(void *object) {
     }
     //make a new header
     //free_header_t *T = (free_header_t *)object;             
-    if (curr != free_list_ptr){
-        //insert after
-        toPointer(objectIndex)->magic = MAGIC_FREE;
-        toPointer(objectIndex)->next = curr;                                                                
-        toPointer(objectIndex)->prev = toPointer(curr)->prev;
-        //Insert object back into the list
-        //toPointer(objectIndex)->next = curr;
-        //toPointer(objectIndex)->prev = toPointer(curr)->prev;
-        toPointer(toPointer(curr)->prev)->next = objectIndex;
-        toPointer(curr)->prev = objectIndex;
-    } else { //please check this works
+     //please check this works
         //insert before
-        toPointer(objectIndex)->magic = MAGIC_FREE;
-        toPointer(objectIndex)->prev = curr;                                                                
-        toPointer(objectIndex)->next = toPointer(curr)->next;
-        toPointer(toPointer(curr)->next)->prev = objectIndex;
-        toPointer(curr)->next = objectIndex;
-    }
+    toPointer(objectIndex)->magic = MAGIC_FREE;
+    toPointer(objectIndex)->prev = curr;                                                                
+    toPointer(objectIndex)->next = toPointer(curr)->next;
+    toPointer(toPointer(curr)->next)->prev = objectIndex;
+    toPointer(curr)->next = objectIndex;
+
        
     //Change status of region to FREE
     //toPointer(objectIndex)->magic = MAGIC_FREE;
@@ -239,7 +230,7 @@ void sal_free(void *object) {
        printf("wank\n");
     }
     //printf("exit loop -- swag\n");
-    //merge();
+    merge();
     //printf("sal_free exited\n");
 }
 
