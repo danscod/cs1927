@@ -135,11 +135,6 @@ int exploreGraph(Graph g, Vertex dest, int max, int *explored, Queue frontier, i
 	if (temp == dest) {
 		return j; 
 	} else {
-		//Add temp to the explored array
-		explored[j] = temp;
-		j++;
-		printf("j is: %d\n", j);
-		printArray(explored, j);
 
 		//Add all children of temp to the frontier queue
 		int i = 0;
@@ -149,6 +144,15 @@ int exploreGraph(Graph g, Vertex dest, int max, int *explored, Queue frontier, i
 				//printf("i is: %d; g->edges[temp][i] is: %d\n", i, g->edges[temp][i]);
 			}
 		}
+		
+
+		//Add temp to the explored array
+		explored[j] = temp;
+		if (i > 1) {
+			j++;
+		}
+		printf("j is: %d\n", j);
+		printArray(explored, j);
 		exploreGraph(g, dest, max, explored, frontier, j);
 	}
 	printf("I shouldn't be here\n");
