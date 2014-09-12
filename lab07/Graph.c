@@ -182,3 +182,114 @@ void printArray(int *explored, int j) {
 		}
 	}
 */
+
+/*
+//this is my effort, tried to read ^^ but the recurrsion got weird, i think thats a depth first thing
+//either way, theres a small bug somewhere if you need to go more than two nodes for some reason, probably inside the if
+//ill keep working for now and commit anything new if its good and can do some more on sunday night if need be
+//sorry if you dont like it
+// find a path between two vertices using breadth-first traversal
+// only allow edges whose weight is less than "max"
+int findPath(Graph g, Vertex src, Vertex dest, int max, int *path)
+{
+    //seems to have a problem if theres more than two cities
+    printf("enter function\n");
+    //check if valid
+	assert(g != NULL && validV(g,src) && validV(g,dest));
+	//make queue and path array
+	//path = malloc(g->nV * sizeof(Vertex)); //already done
+	Queue q = newQueue();
+    //set up random valiables
+	int found = 0;
+	Vertex visited[g->nV];
+	int i, j;
+	Vertex tempPath[g->nV];
+	//set all values to -1 so can check if has been visited
+	for (i = 0; i < g->nV; i++) {
+	   visited[i] = -1;
+	}
+	//set up initial queue
+	Vertex temp = src;
+	QueueJoin(q, temp);
+	//go though queue V times
+	while (found == 0){
+	    //go until dest is found or return
+        for (i = 0; i < g->nV; i++) {
+            if (g->edges[temp][i] > 0 && g->edges[temp][i] <= max && visited[i] < 0) {
+                //mark visited when put onto the queue so theres no repeats
+                //put the value of the vertex it came from into the index of the vertex so it can be backtracked
+                visited[i] = temp;
+                if (i == dest){
+                    //exit loop if destination is found
+                    found = 1;
+                    break;
+                }
+                QueueJoin(q, i);
+            }
+        }
+        if (QueueIsEmpty(q)){
+           //if the queue is empty then there is no path
+           return -1;
+        }
+        //increment temp the be the next one on the queue
+        temp = QueueLeave(q);
+    }
+    //by the time we get to here we should have found the destination (or returned) and have an array full of where vertices came from
+    j = 0;
+    //go through the visited and track where it came from
+    while (i > 0){
+        tempPath[j] = i;
+        i = visited[i];
+        j++;
+    }
+    j--;
+    int size = j;
+    //reverse array
+    for (i = 0 ; j > -1; j--){
+       path[i] = tempPath[j];
+       i++;
+    }
+	return size + 1;
+}
+
+/*
+z5015215@fife06:~/cs1927/labs/lab07$ ./travel Berlin Chicago
+enter function
+Least-hops route:
+Berlin
+->Chicago
+z5015215@fife06:~/cs1927/labs/lab07$ ./travel Guam Manila
+enter function
+Least-hops route:
+Guam
+->Manila
+z5015215@fife06:~/cs1927/labs/lab07$ ./travel Guam Bombay
+enter function
+Least-hops route:
+Guam
+->Bombay
+z5015215@fife06:~/cs1927/labs/lab07$ ./travel Guam Baghdad
+enter function
+Least-hops route:
+Guam
+->Bombay
+->Baghdad
+z5015215@fife06:~/cs1927/labs/lab07$ ./travel Guam Berlin
+enter function
+Least-hops route:
+Guam
+->Bombay
+->Berlin
+z5015215@fife06:~/cs1927/labs/lab07$ ./travel Guam Montreal
+enter function
+Segmentation fault
+z5015215@fife06:~/cs1927/labs/lab07$ ./travel Guam Berlin 2000
+enter function
+No route from Guam to Berlin
+z5015215@fife06:~/cs1927/labs/lab07$ ./travel Guam Montreal 20000
+enter function
+Least-hops route:
+Guam
+->Montreal
+*/
+*/
