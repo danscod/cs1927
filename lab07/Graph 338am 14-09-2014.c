@@ -104,6 +104,92 @@ void showGraph(Graph g, char **names)
 	}
 }
 
+
+int exploreGraph(Graph g, Vertex dest, int max, int *explored, Queue frontier, int j);
+void printArray(int *explored, int j);
+// find a path between two vertices using breadth-first traversal
+// only allow edges whose weight is less than "max"
+int findPath(Graph g, Vertex src, Vertex dest, int max, int *explored)
+{
+	//Setup
+	assert(g != NULL && validV(g,src) && validV(g,dest));
+
+	Queue frontier = newQueue();
+	QueueJoin(frontier, src);
+
+	int j = 0;
+
+	j = exploreGraph(g, dest, max, explored, frontier, j);
+
+	printf("exploreGraph has been exited\n");
+	printArray(explored, j);
+	printf("EXITING findPath. j is : %d\n", j);
+
+
+	return j;
+}
+
+int exploreGraph(Graph g, Vertex dest, int max, int *explored, Queue frontier, int j) {
+	Vertex temp = QueueLeave(frontier);
+	printf("Vertex temp is: %d\n", temp);
+	if (temp == dest) {
+		return j; 
+	} else {
+
+		//Add all children of temp to the frontier queue
+		int i = 0;
+		for (i = 0; i < g->nV; i++) {
+			if (g->edges[temp][i] > 0 && g->edges[temp][i] <= max) {
+				QueueJoin(frontier, i);
+				//printf("i is: %d; g->edges[temp][i] is: %d\n", i, g->edges[temp][i]);
+			}
+		}
+		
+
+		//Add temp to the explored array
+		explored[j] = temp;
+		if (i > 1) {
+			j++;
+		}
+		printf("j is: %d\n", j);
+		printArray(explored, j);
+		exploreGraph(g, dest, max, explored, frontier, j);
+	}
+	printf("I shouldn't be here\n");
+	return j;
+}
+
+
+void printArray(int *explored, int j) {
+	printf("This is what int *explored looks like:\n");
+	int arrayCounter = 0;
+	for (arrayCounter = 0; arrayCounter < 30; arrayCounter++) {
+		printf("%d, ", explored[arrayCounter]);
+	}
+	printf("\nAbout to leave...\n");	
+}
+/*
+	for (j = 0; j < g->nV; j++) {
+		src = QueueLeave(q);
+		for (i = 0; i < g->nV; i++){
+			if (g->edges[src][i] > 0 && visited[i] == 0 && g->edges[src][i] <= max){
+				QueueJoin(q, i);
+				visited[i] = 1;
+			}
+			if (i == dest){
+				return j;
+			}
+		}
+	}
+*/
+
+/*
+//this is my effort, tried to read ^^ but the recurrsion got weird, i think thats a depth first thing
+//either way, theres a small bug somewhere if you need to go more than two nodes for some reason, probably inside the if
+//ill keep working for now and commit anything new if its good and can do some more on sunday night if need be
+//sorry if you dont like it
+// find a path between two vertices using breadth-first traversal
+// only allow edges whose weight is less than "max"
 int findPath(Graph g, Vertex src, Vertex dest, int max, int *path)
 {
     //seems to have a problem if theres more than two cities
@@ -165,3 +251,45 @@ int findPath(Graph g, Vertex src, Vertex dest, int max, int *path)
     }
 	return size + 1;
 }
+
+/*
+z5015215@fife06:~/cs1927/labs/lab07$ ./travel Berlin Chicago
+enter function
+Least-hops route:
+Berlin
+->Chicago
+z5015215@fife06:~/cs1927/labs/lab07$ ./travel Guam Manila
+enter function
+Least-hops route:
+Guam
+->Manila
+z5015215@fife06:~/cs1927/labs/lab07$ ./travel Guam Bombay
+enter function
+Least-hops route:
+Guam
+->Bombay
+z5015215@fife06:~/cs1927/labs/lab07$ ./travel Guam Baghdad
+enter function
+Least-hops route:
+Guam
+->Bombay
+->Baghdad
+z5015215@fife06:~/cs1927/labs/lab07$ ./travel Guam Berlin
+enter function
+Least-hops route:
+Guam
+->Bombay
+->Berlin
+z5015215@fife06:~/cs1927/labs/lab07$ ./travel Guam Montreal
+enter function
+Segmentation fault
+z5015215@fife06:~/cs1927/labs/lab07$ ./travel Guam Berlin 2000
+enter function
+No route from Guam to Berlin
+z5015215@fife06:~/cs1927/labs/lab07$ ./travel Guam Montreal 20000
+enter function
+Least-hops route:
+Guam
+->Montreal
+*/
+
