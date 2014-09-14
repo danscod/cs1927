@@ -1,3 +1,8 @@
+// OpenLearning Group: "Danapalooza"
+// Wednesday 18 Drum
+// Danilo Scodellaro & Daniel Lohrey
+// z3414551 | z5015215
+
 // Graph.c ... implementation of Graph ADT
 // Written by John Shepherd, May 2013
 
@@ -7,6 +12,9 @@
 #include <string.h>
 #include "Graph.h"
 #include "Queue.h"
+
+#define TRUE 1
+#define FALSE 0
 
 // graph representation (adjacency matrix)
 typedef struct GraphRep {
@@ -104,64 +112,121 @@ void showGraph(Graph g, char **names)
 	}
 }
 
-int findPath(Graph g, Vertex src, Vertex dest, int max, int *path)
-{
-    //seems to have a problem if theres more than two cities
-    printf("enter function\n");
-    //check if valid
-	assert(g != NULL && validV(g,src) && validV(g,dest));
-	//make queue and path array
-	//path = malloc(g->nV * sizeof(Vertex)); //already done
-	Queue q = newQueue();
-    //set up random valiables
-	int found = 0;
-	Vertex visited[g->nV];
-	int i, j;
-	Vertex tempPath[g->nV];
-	//set all values to -1 so can check if has been visited
+// find a path between two vertices using breadth-first traversal
+// only allow edges whose weight is less than "max"
+// CURRENT ISSUE: SHORTEST PATHS BETWEEN TWO CITIES SEEM TOO LONG. POSSIBLE
+// ERROR IN COMPARISON BETWEEN MAX AND ADJACENCY MATRIX VALUES
+int findPath(Graph g, Vertex src, Vertex dest, int max, int* bestPath) {
+
+	//Setup
+	//Ensure valid inputs
+	assert(g != NULL);
+	assert(validV(g,src));
+	assert(validV(g,dest));	
+
+	//Create necessary variables
+	int *explored = calloc(g->nV, sizeof(int));		//Array of visited nodes (all set to 0)
+	Vertex *path = calloc(g->nV, sizeof(Vertex));	//Array of nodes within the path
+	Queue q = newQueue();							//Queue of frontier nodes
+	QueueJoin(q, src);								//Add the source Vertex to the Queue (first node to be explored)
+	int isLocated = FALSE;							//Boolean flag to see if destination has been located (#defined)
+
+	//Fill the given array (bestPath) with -1s (allows us to calculate length later)
+	int i;
 	for (i = 0; i < g->nV; i++) {
-	   visited[i] = -1;
+		bestPath[i] = -1;
 	}
-	//set up initial queue
-	Vertex temp = src;
-	QueueJoin(q, temp);
-	//go though queue V times
-	while (found == 0){
-	    //go until dest is found or return
-        for (i = 0; i < g->nV; i++) {
-            if (g->edges[temp][i] > 0 && g->edges[temp][i] <= max && visited[i] < 0) {
-                //mark visited when put onto the queue so theres no repeats
-                //put the value of the vertex it came from into the index of the vertex so it can be backtracked
-                visited[i] = temp;
-                if (i == dest){
-                    //exit loop if destination is found
-                    found = 1;
-                    break;
-                }
-                QueueJoin(q, i);
-            }
-        }
-        if (QueueIsEmpty(q)){
-           //if the queue is empty then there is no path
-           return -1;
-        }
-        //increment temp the be the next one on the queue
-        temp = QueueLeave(q);
-    }
-    //by the time we get to here we should have found the destination (or returned) and have an array full of where vertices came from
-    j = 0;
-    //go through the visited and track where it came from
-    while (i > 0){
-        tempPath[j] = i;
-        i = visited[i];
-        j++;
-    }
-    j--;
-    int size = j;
-    //reverse array
-    for (i = 0 ; j > -1; j--){
-       path[i] = tempPath[j];
-       i++;
-    }
-	return size + 1;
+
+	//Traverse the graph
+	while (QueueIsEmpty(q) == FALSE && isLocated == FALSE) {
+		//printf("While loop entered\n");
+		Vertex y = QueueLeave(q);					//Dequeue the first vertex in the queue,
+		Vertex x = y;								//and store as temporary vertices x and y
+		if (explored[x] == TRUE) {					//If we've already explored this node, then move on 
+			continue;
+		}
+		explored[x] = TRUE;							//Mark this node as explored
+
+		//Loop within the level to determine path
+		for (y = 0; y < g->nV; y++) {
+			//Abort loop is the vertex has already been visited, or edge is nonexistent/too long
+			if (explored[y] == TRUE || g->edges[x][y] == FALSE 
+				|| g->edges[x][y] > max) {
+				continue;
+			}
+			//Record node in path array (allows us to deconstruct into bestPath)
+			path[y] = x;
+			//Abort loop if the node y is dest
+			if (y == dest) {
+				isLocated = TRUE;
+				break;
+			}
+			//If not has not been explored, add to queue
+			if (explored[y] == FALSE) {
+				QueueJoin(q,y);
+			}
+		}
+	}
+
+	//Generate bestPath
+	//PROBLEM - PATH IS GENERATED IN REVERSE ORDER. MUST FIX
+	if (isLocated == FALSE) {
+		return 0;
+	} else {
+		Vertex temp;
+		for (temp = dest, i = 0; temp != src; temp = path[temp], i++) {
+			bestPath[i] = temp;
+		}
+		bestPath[i] = src;
+	}
+
+	//Determine length of bestPath
+	for (i = 0; i < g->nV; i++) {
+		if (bestPath[i] == -1) {
+			break;
+		}
+	}
+
+	//Return length of bestPath which is occupied by meaningful values
+	return i;
 }
+
+// REFERENCES
+// Based on the following code by John Shepherd, located iat:
+// /~cs1927/14s2/lecs/week06mon/exercises/GraphLab 
+/*
+// iterative BFS algorithm to print path src...dest
+
+void findPath(Graph g, Vertex src, Vertex dest)
+{
+   visited = calloc(g->nV,sizeof(int));
+   Vertex *path = calloc(g->nV,sizeof(Vertex));
+   Queue q = newQueue();
+   QueueJoin(q,src);
+   int isFound = 0;
+   while (!QueueIsEmpty(q) && !isFound) {
+      Vertex y, x = QueueLeave(q);
+      if (visited[x]) continue;
+      visited[x] = 1;
+      printf("x=%d, q=",x);
+      for (y = 0; y < g->nV; y++) {
+         if (g->edges[x][y] == 0 || visited[y]) continue;
+         path[y] = x;
+         if (y == dest) { isFound = 1; break; }
+         if (!visited[y]) QueueJoin(q,y);
+      }
+      showQueue(q);
+   }
+   if (!isFound)
+      printf("No path from %d to %d\n",src,dest);
+   else {
+      // display path in dest..src order
+      Vertex v;
+      printf("Path: ");
+      for (v = dest; v != src; v = path[v])
+          printf("%d<-", v);
+      printf("%d\n", src);
+   }
+}
+
+*/
