@@ -171,7 +171,7 @@ int findPath(Graph g, Vertex src, Vertex dest, int max, int* bestPath) {
 	//Generate bestPath
 	//PROBLEM - PATH IS GENERATED IN REVERSE ORDER. MUST FIX
 	if (isLocated == FALSE) {
-		return 0;
+		return -1;
 	} else {
 		Vertex temp;
 		for (temp = dest, i = 0; temp != src; temp = path[temp], i++) {
@@ -185,6 +185,15 @@ int findPath(Graph g, Vertex src, Vertex dest, int max, int* bestPath) {
 		if (bestPath[i] == -1) {
 			break;
 		}
+	}
+	
+	//reverse order of array
+	int j;
+	Vertex temp;
+	for (j = 0; j < (i+1)/2; j++){
+	   temp = bestPath[j];
+	   bestPath[j] = bestPath[i - j - 1];
+	   bestPath[i - j - 1] = temp;
 	}
 
 	//Return length of bestPath which is occupied by meaningful values
