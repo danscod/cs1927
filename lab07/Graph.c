@@ -196,6 +196,10 @@ int findPath(Graph g, Vertex src, Vertex dest, int max, int* bestPath) {
 	   bestPath[i - j - 1] = temp;
 	}
 
+
+	//free arrays
+
+	
 	//Return length of bestPath which is occupied by meaningful values
 	return i;
 }
