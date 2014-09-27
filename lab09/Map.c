@@ -163,10 +163,18 @@ int shortestPath(Map g, Location start, Location end, Location path[], Transport
    //visited[start] = TRUE;
    QueueJoin(q, start);
 
+   // Fill path and trans with -1s to calculate length later
+   int i;
+   for (i = 0; i < g->nV; i++) {
+      path[i] = -1;
+      trans[i] = 0;
+   }
+
    // Traverse the graph
    while (QueueIsEmpty(q) == FALSE && isLocated == FALSE) {
+      //printf("Entering 1st While Loop\n");
       Location curr = QueueLeave(q);
-      Edge temp = g->connections[curr];
+      VList temp = g->connections[curr];
       if (visited[curr] == TRUE) {
          continue;
       }
@@ -174,28 +182,33 @@ int shortestPath(Map g, Location start, Location end, Location path[], Transport
 
       // Loop through the list to find all neighbours
       while (temp != NULL) {
-         if (visited[temp->end] == TRUE) {
+         //printf("Boo\n");
+         if (visited[temp->v] == TRUE) {
+            temp = temp->next;
             continue;
          }
          // Record location in the st array (shows order of visit)
-         st[temp->end] = curr;
+         st[temp->v] = curr;
 
          // Abort loop if the end Location has been reached
-         if (temp->end = end) {
+         if (temp->v == end) {
             isLocated = TRUE;
             break;
          }
          // Add to the Queue (can only add if not yet visited)
-         QueueJoin(q, temp->end);
+         QueueJoin(q, temp->v);
 
          //Progress through the list
          temp = temp->next;
-      }
 
+         //DEBUG
+         //showQueue(q);
+         //printf("Hiss\n");
+      }
+      //printf("Ending 1st While Loop\n");
    }
 
    //Generate the route
-   int i = 0;
    Location x;
    if (isLocated == FALSE) {
       return 0;
@@ -216,10 +229,16 @@ int shortestPath(Map g, Location start, Location end, Location path[], Transport
    //reverse order of array
    int j;
    for (j = 0; j < (i+1)/2; j++){
-      x = bestPath[j];
+      x = path[j];
       path[j] = path[i - j - 1];
       path[i - j - 1] = x;
    }   
+
+   //free memory
+   free(visited);
+   free(st);
+   dropQueue(q);
+
 
    return i;//LENGTH OF ARRAY;
 
