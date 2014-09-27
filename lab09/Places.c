@@ -1,4 +1,4 @@
-// Places.c ... implementation of Places
+// places.c ... implementation of Places
 
 #include <stdlib.h>
 #include <assert.h>
@@ -52,8 +52,8 @@ static Place places[] =
    {"Ionian Sea", "IO", IONIAN_SEA, SEA},
    {"Irish Sea", "IR", IRISH_SEA, SEA},
    {"Klausenburg", "KL", KLAUSENBURG, LAND},
-   {"Leipzig", "LI", LEIPZIG, LAND},
    {"Le Havre", "LE", LE_HAVRE, LAND},
+   {"Leipzig", "LI", LEIPZIG, LAND},
    {"Lisbon", "LS", LISBON, LAND},
    {"Liverpool", "LV", LIVERPOOL, LAND},
    {"London", "LO", LONDON, LAND},
@@ -94,50 +94,42 @@ static Place places[] =
 char *idToName(Location p)
 {
    assert(validPlace(p));
-
    return places[p].name;
 }
 
 // given a Place number, return its type
-PlaceType idToType(Location p)
+int idToType(Location p)
 {
    assert(validPlace(p));
    return places[p].type;
 }
 
-
-// TODO: for Task 1
-
-
 // given a Place name, return its ID number
-Location nameToID(char *name)
+// binary search
+int nameToID(char *name)
 {
-
-   int i;
-   // loop through the array to find correct place
-   for(i = 0; i < NUM_PLACES; i++)
-   {
-      if (strcmp(places[i].name,name) == 0)
-      {
-         break;
-      }
-
+   int lo = 0, hi = NUM_PLACES-1;
+   while (lo <= hi) {
+      int mid = (hi+lo)/2;
+      int ord = strcmp(name,places[mid].name);
+      if (ord < 0)
+         hi = mid-1;
+      else if (ord > 0)
+         lo = mid+1;
+      else
+         return places[mid].id;
    }
-   return places[i].id; 
+   return NOWHERE;
 }
 
 // given a Place abbreviation (2 char), return its ID number
-Location abbrevToID(char *abbrev)
+int abbrevToID(char *abbrev)
 {
-
-   int i;
-   // loop through the array to find correct place
-   for(i = 0; i < NUM_PLACES; i++)
-   {
-      if (strcmp(places[i].abbrev, abbrev) == 0)
-      {
-         break;
-      }
+   // an attempt to optimise a linear search
+   Place *p, *end = &places[NUM_PLACES];
+   for (p = places; p < end; p++) {
+      char *c = p->abbrev;
+      if (c[0] == abbrev[0] && c[1] == abbrev[1] && c[2] == '\0') return p->id;
    }
-   return places[i].id; 
+   return NOWHERE;
 }

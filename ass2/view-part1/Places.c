@@ -6,17 +6,18 @@
 #include "Places.h"
 
 typedef struct Place {
-   char     *name;
-   char     *abbrev;
-   Location  id;
-   PlaceType type;
+   char      *name;
+   char      *abbrev;
+   LocationID id;
+   PlaceType  type;
 } Place;
 
 // Places should appear in alphabetic order
 // Each entry should satisfy (places[i].id == i)
+// First real place must be at index MIN_MAP_LOCATION
+// Last real place must be at index MAX_MAP_LOCATION
 static Place places[] =
 {
-   {"Nowhere", "NO", NOWHERE, UNKNOWN},
    {"Adriatic Sea", "AS", ADRIATIC_SEA, SEA},
    {"Alicante", "AL", ALICANTE, LAND},
    {"Amsterdam", "AM", AMSTERDAM, LAND},
@@ -52,8 +53,8 @@ static Place places[] =
    {"Ionian Sea", "IO", IONIAN_SEA, SEA},
    {"Irish Sea", "IR", IRISH_SEA, SEA},
    {"Klausenburg", "KL", KLAUSENBURG, LAND},
-   {"Leipzig", "LI", LEIPZIG, LAND},
    {"Le Havre", "LE", LE_HAVRE, LAND},
+   {"Leipzig", "LI", LEIPZIG, LAND},
    {"Lisbon", "LS", LISBON, LAND},
    {"Liverpool", "LV", LIVERPOOL, LAND},
    {"London", "LO", LONDON, LAND},
@@ -91,53 +92,47 @@ static Place places[] =
 };
 
 // given a Place number, return its name
-char *idToName(Location p)
+char *idToName(LocationID p)
 {
    assert(validPlace(p));
-
    return places[p].name;
 }
 
 // given a Place number, return its type
-PlaceType idToType(Location p)
+int idToType(LocationID p)
 {
    assert(validPlace(p));
    return places[p].type;
 }
 
-
-// TODO: for Task 1
-
-
 // given a Place name, return its ID number
-Location nameToID(char *name)
+// binary search
+int nameToID(char *name)
 {
-
-   int i;
-   // loop through the array to find correct place
-   for(i = 0; i < NUM_PLACES; i++)
-   {
-      if (strcmp(places[i].name,name) == 0)
-      {
-         break;
-      }
-
+   int lo = MIN_MAP_LOCATION, hi = MAX_MAP_LOCATION;
+   while (lo <= hi) {
+      int mid = (hi+lo)/2;
+      int ord = strcmp(name,places[mid].name);
+      if (ord < 0)
+         hi = mid-1;
+      else if (ord > 0)
+         lo = mid+1;
+      else
+         return places[mid].id;
    }
-   return places[i].id; 
+   return NOWHERE;
 }
 
 // given a Place abbreviation (2 char), return its ID number
-Location abbrevToID(char *abbrev)
+int abbrevToID(char *abbrev)
 {
-
-   int i;
-   // loop through the array to find correct place
-   for(i = 0; i < NUM_PLACES; i++)
-   {
-      if (strcmp(places[i].abbrev, abbrev) == 0)
-      {
-         break;
-      }
+   // an attempt to optimise a linear search
+   Place *p;
+   Place *first = &places[MIN_MAP_LOCATION];
+   Place *last = &places[MAX_MAP_LOCATION];
+   for (p = first; p <= last; p++) {
+      char *c = p->abbrev;
+      if (c[0] == abbrev[0] && c[1] == abbrev[1] && c[2] == '\0') return p->id;
    }
-   return places[i].id; 
+   return NOWHERE;
 }
