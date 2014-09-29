@@ -144,103 +144,98 @@ int numE(Map g, Transport type)
 // Returns number of vertices in path otherwise
 int shortestPath(Map g, Location start, Location end, Location path[], Transport trans[])
 {
-	// TODO: replace the code by a shortest path algorithm
+	// TODO: replace the code with a shortest path algorithm
 
-   //Setup
    //Ensure Valid Inputs
    assert(g != NULL);
    assert(path != NULL);
    assert(trans != NULL);
    
-   
    // Create necessary variables
    Location *visited = calloc(g->nV, sizeof(int));     //Array of visited nodes (all set to 0)
    Location *st = calloc(g->nV, sizeof(int));
+   Location *stTrans = calloc(g->nV, sizeof(int));
    Queue q = newQueue();
+   QueueJoin(q, start);
    int isLocated = FALSE;
 
-   // Mark the current node as visited and add to queue
-   //visited[start] = TRUE;
-   QueueJoin(q, start);
-
-   // Fill path and trans with -1s to calculate length later
+   // Fill path with -1s to calculate length later
    int i;
    for (i = 0; i < g->nV; i++) {
       path[i] = -1;
-      trans[i] = 0;
    }
 
    // Traverse the graph
    while (QueueIsEmpty(q) == FALSE && isLocated == FALSE) {
-      //printf("Entering 1st While Loop\n");
+
+      // Dequeue the first Location in the Queue, and store temporarily
       Location curr = QueueLeave(q);
       VList temp = g->connections[curr];
-      if (visited[curr] == TRUE) {
-         continue;
-      }
-      visited[curr] = TRUE;
 
       // Loop through the list to find all neighbours
       while (temp != NULL) {
-         //printf("Boo\n");
+
+         //Check if this Location has been visited prior
          if (visited[temp->v] == TRUE) {
             temp = temp->next;
             continue;
          }
+
          // Record location in the st array (shows order of visit)
          st[temp->v] = curr;
+         stTrans[temp->v] = temp->type;
 
          // Abort loop if the end Location has been reached
          if (temp->v == end) {
             isLocated = TRUE;
+            stTrans[end] = temp->type;
             break;
          }
+
          // Add to the Queue (can only add if not yet visited)
          QueueJoin(q, temp->v);
+         visited[temp->v] = TRUE;
 
-         //Progress through the list
+         // Progress through the list
          temp = temp->next;
 
-         //DEBUG
-         //showQueue(q);
-         //printf("Hiss\n");
       }
-      //printf("Ending 1st While Loop\n");
    }
 
-   //Generate the route
+   // Generate the route (also determines length of path)
    Location x;
+   Transport y;
    if (isLocated == FALSE) {
       return 0;
    } else {
-      for (x = end, i = 0; x != start; x = st[x], i++) {
+      for (x = end, y = stTrans[end], i = 0; x != start;
+          x = st[x], y = stTrans[x], i++) {
          path[i] = x;
+         trans[i] = y;
       }
       path[i] = start;
-   }
-
-   //Determine length of path
-   for (i = 0; i < g->nV; i++) {
-      if (path[i] == -1) {
-         break;
-      }
+      trans[i] = 0;
    }
    
-   //reverse order of array
+   // Reverse order of arrays
    int j;
    for (j = 0; j < (i+1)/2; j++){
       x = path[j];
+      y = trans[j];
       path[j] = path[i - j - 1];
+      trans[j] = trans[i - j - 1];
       path[i - j - 1] = x;
+      trans[i - j - 1] = y;
    }   
 
-   //free memory
+   // Free memory
    free(visited);
    free(st);
+   free(stTrans);
    dropQueue(q);
 
-
-   return i;//LENGTH OF ARRAY;
+   // Return length of path array
+   return i;
 
 }
 

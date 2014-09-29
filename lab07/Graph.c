@@ -164,6 +164,7 @@ int findPath(Graph g, Vertex src, Vertex dest, int max, int* bestPath) {
 			//If not has not been explored, add to queue
 			if (explored[y] == FALSE) {
 				QueueJoin(q,y);
+				explored[y] = TRUE;
 			}
 		}
 	}
