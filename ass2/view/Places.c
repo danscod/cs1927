@@ -101,7 +101,11 @@ char *idToName(LocationID p)
 // given a Place number, return its type
 int idToType(LocationID p)
 {
-   assert(validPlace(p));
+   //assert(validPlace(p));
+
+   if (p > MAX_MAP_LOCATION) {
+      return UNKNOWN;
+   }
    return places[p].type;
 }
 
