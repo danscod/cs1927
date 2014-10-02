@@ -288,15 +288,35 @@ int calculateHunterHealth (char *pastPlays, PlayerID player) {
     int i = 0;  //Counter
     int j = 0;  //Counter
     int pastPlaysLength = strlen(pastPlays);
+    char playerInitial;
 
     //Each Hunter starts with 9 life points
     int health = GAME_START_HUNTER_LIFE_POINTS;
 
+    //Determine which player initial to look for
+    switch (player) {
+        case PLAYER_LORD_GODALMING : playerInitial = 'G'; break;
+        case PLAYER_DR_SEWARD : playerInitial = 'S'; break;
+        case PLAYER_VAN_HELSING : playerInitial = 'H'; break;
+        case PLAYER_MINA_HARKER : playerInitial = 'M'; break;
+        case PLAYER_DRACULA : playerInitial = 'D'; break;
+    }
+
     //Loop through player's turns
-    for (j = TURN_CHAR_LENGTH * player; j < pastPlaysLength; j = j + TURN_CHAR_LENGTH) {
+    for (j = 0; j < pastPlaysLength; j++) {
+
+        //Keep moving if not the start of a turn
+        if (pastPlays[j] != ' ') {
+            continue;
+        }
+
+        //Keep moving if not the player in question
+        if (pastPlays[j + 1] != playerInitial) {
+            continue;
+        }        
 
         //Loop through the Action phase
-        for (i = TRAP_CHAR_OFFSET; i < pastPlaysLength; i++) {
+        for (i = TRAP_CHAR_OFFSET + 1; i < pastPlaysLength; i++) {
             //If a hunter encounters a trap they lose 2 life points
             if (pastPlays[j + i] == 'T') {
                 health = health - LIFE_LOSS_TRAP_ENCOUNTER;
@@ -313,13 +333,13 @@ int calculateHunterHealth (char *pastPlays, PlayerID player) {
         }
 
         //Abort loop now if this is the player's first turn
-        if (j == TURN_CHAR_LENGTH * player) {
+        if (calculateRound(pastPlays) == 0) {
             continue;
         }
 
         //If last turn was spent in the Hospital of St Joseph & St Mary, restore health
-        if (pastPlays[j - ROUND_CHAR_LENGTH + LOCATION_CHAR_OFFSET] == 'M' &&
-            pastPlays[j - ROUND_CHAR_LENGTH + LOCATION_CHAR_OFFSET - 1] == 'J') {
+        if (pastPlays[j + 1 - ROUND_CHAR_LENGTH + LOCATION_CHAR_OFFSET] == 'M' &&
+            pastPlays[j + 1 - ROUND_CHAR_LENGTH + LOCATION_CHAR_OFFSET - 1] == 'J') {
             health = health + LIFE_GAIN_REST;
             if (health > GAME_START_HUNTER_LIFE_POINTS) {
                 health = GAME_START_HUNTER_LIFE_POINTS;
@@ -327,8 +347,8 @@ int calculateHunterHealth (char *pastPlays, PlayerID player) {
         }
 
         //If last turn was spent in the same location (i.e. player resting)
-        if (pastPlays[j - ROUND_CHAR_LENGTH + LOCATION_CHAR_OFFSET] == pastPlays[j + LOCATION_CHAR_OFFSET] &&
-            pastPlays[j - ROUND_CHAR_LENGTH + LOCATION_CHAR_OFFSET - 1] == pastPlays[j + LOCATION_CHAR_OFFSET - 1]) {
+        if (pastPlays[j + 1 - ROUND_CHAR_LENGTH + LOCATION_CHAR_OFFSET] == pastPlays[j + LOCATION_CHAR_OFFSET] &&
+            pastPlays[j + 1 - ROUND_CHAR_LENGTH + LOCATION_CHAR_OFFSET - 1] == pastPlays[j + LOCATION_CHAR_OFFSET - 1]) {
             health = health + LIFE_GAIN_REST;
             if (health > GAME_START_HUNTER_LIFE_POINTS) {
                 health = GAME_START_HUNTER_LIFE_POINTS;
@@ -440,7 +460,10 @@ int getHealth(GameView currentView, PlayerID player)
     assert(currentView != NULL);
     assert(player >= 0 && player <= 4);
     //DEBUG
-    printf("Health of player %d is: %d\n", player, currentView->currHealth[player]);
+    int i = 0;
+    for (i = 0; i < NUM_PLAYERS; i++) {
+        printf("Health of player %d is: %d\n", i, currentView->currHealth[i]);
+    }
     return currentView->currHealth[player];
 }
 
