@@ -398,7 +398,7 @@ int calculateDraculaHealth (char *pastPlays) {
         }
 
         //Loop through the Action phase
-        for (i = TRAP_CHAR_OFFSET; i < MAX_TRAP_LENGTH; i++) {
+        for (i = TRAP_CHAR_OFFSET + 1; i < TRAP_CHAR_OFFSET + 1 + MAX_TRAP_LENGTH; i++) {
 
             //If a hunter encounters Dracula he loses 10 blood points
             if (pastPlays[j + i] == 'D') {
@@ -491,6 +491,11 @@ int calculateDraculaHealth (char *pastPlays) {
         }
 
     }
+
+    /*
+    printf("this is gameView.c speaking\n");
+    printf("Dracula's health is: %d\n", health);
+    */
 
     return health;
     
