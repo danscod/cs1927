@@ -15,8 +15,8 @@
 #define ROUND_CHAR_LENGTH 40
 #define MAX_TRAP_LENGTH 4
 #define VAMPIRE_MATURE_OFFSET 6
-// #include "Map.h" ... if you decide to use the Map ADT
 
+// ADTs
 struct gameView
 {
     int currScore;
@@ -45,7 +45,7 @@ struct MapRep
     VList connections[NUM_MAP_LOCATIONS]; // array of lists
 };
 
-//Function Prototypes (MUST BE HANDLED CORRECTLY)
+// Function Prototypes (MUST BE HANDLED CORRECTLY)
 int calculateScore (char *pastPlays);
 int calculateHunterHealth (char *pastPlays, PlayerID player);
 int calculateDraculaHealth (char *pastPlays);
@@ -103,7 +103,6 @@ GameView newGameView(char *pastPlays, PlayerMessage messages[])
         gameView->trail[PLAYER_DRACULA][i] = trail[i];
     }
     gameView->map = newMap();
-
 
     return gameView;
 }
@@ -700,18 +699,34 @@ LocationID *connectedLocations(GameView currentView, int *numLocations,
     {
 
         //Add each destination to the array if it is of the correct type
+        //Case of ROAD destinations
         if (curr->type == ROAD && road == TRUE)
         {
             connectedLocations[i] = curr->v;
             i++;
         }
-        else if (curr->type == RAIL && rail == TRUE && player != PLAYER_DRACULA && railModifier >= 1)
+        //Case of RAIL destinations
+        else if (curr->type == RAIL && rail == TRUE && player != PLAYER_DRACULA)
         {
-            connectedLocations[i] = curr->v;
-            i++;
-            //Case if railModifier == 2
-            //Case if railModifier == 3
+            if (railModifier == 1)
+            {
+                connectedLocations[i] = curr->v;
+                i++;
+            }
+            else if (railModifier == 2)
+            {
+                //INCOMPLETE
+                connectedLocations[i] = curr->v;
+                i++;
+            }
+            else if (railModifier == 3)
+            {
+                //INCOMPLETE
+                connectedLocations[i] = curr->v;
+                i++;
+            }
         }
+        //CASE of BOAT destinations
         else if (curr->type == BOAT && sea == TRUE)
         {
             connectedLocations[i] = curr->v;
@@ -722,6 +737,7 @@ LocationID *connectedLocations(GameView currentView, int *numLocations,
         curr = curr->next;
     }
 
+    //Record no. of locations
     *numLocations = i;
 
     return connectedLocations;
@@ -731,5 +747,6 @@ LocationID *connectedLocations(GameView currentView, int *numLocations,
 /*
 connectedLocations
     Case of railModifier > 1
+    multiple entries
 */
 
