@@ -14,6 +14,7 @@
 #define TRAP_CHAR_OFFSET 3
 #define ROUND_CHAR_LENGTH 40
 #define MAX_TRAP_LENGTH 4
+#define VAMPIRE_MATURE_OFFSET 6
 // #include "Map.h" ... if you decide to use the Map ADT
      
 struct gameView {
@@ -315,7 +316,11 @@ int calculateScore (char *pastPlays) {
     }
 
     //The score decreases by 13 each time a Vampire matures
-    //TO BE COMPLETED
+    for (i = 0; i < pastPlaysLength; i = i + TURN_CHAR_LENGTH) {
+        if (pastPlays[i] == 'D' && pastPlays[i + VAMPIRE_MATURE_OFFSET] == 'V') {
+            score = score - SCORE_LOSS_VAMPIRE_MATURES;
+        }
+    }
 
     return score;
     
@@ -364,7 +369,7 @@ int calculateHunterHealth (char *pastPlays, PlayerID player) {
         }        
 
         //Loop through the Action phase
-        for (i = TRAP_CHAR_OFFSET + 1; i < pastPlaysLength; i++) {
+        for (i = TRAP_CHAR_OFFSET + 1; i < TRAP_CHAR_OFFSET + 5; i++) {
             //If a hunter encounters a trap they lose 2 life points
             if (pastPlays[j + i] == 'T') {
                 health = health - LIFE_LOSS_TRAP_ENCOUNTER;
@@ -680,8 +685,7 @@ LocationID *connectedLocations(GameView currentView, int *numLocations,
 
     //Setup Variables
     printf("numLocations is %p, numLocations is %d\n", numLocations, *numLocations);
-    int arraySize = NUM_MAP_LOCATIONS;
-    LocationID *connectedLocations = malloc(arraySize * sizeof(LocationID));
+    LocationID *connectedLocations = malloc(NUM_MAP_LOCATIONS * sizeof(LocationID));
     assert(connectedLocations != NULL);
     connectedLocations[0] = from;
     int i = 1;  //Counter
@@ -693,7 +697,6 @@ LocationID *connectedLocations(GameView currentView, int *numLocations,
     //Loop through the entire "from" list
     while (curr != NULL) {
 
-
         //Add each destination to the array if it is of the correct type
         if (curr->type == ROAD && road == TRUE) {
             connectedLocations[i] = curr->v;
@@ -701,6 +704,8 @@ LocationID *connectedLocations(GameView currentView, int *numLocations,
         } else if (curr->type == RAIL && rail == TRUE && player != PLAYER_DRACULA && railModifier >= 1) {
             connectedLocations[i] = curr->v;
             i++;
+        //Case if railModifier == 2
+        //Case if railModifier == 3
         } else if (curr->type == BOAT && sea == TRUE) {
             connectedLocations[i] = curr->v;
             i++;
@@ -710,6 +715,8 @@ LocationID *connectedLocations(GameView currentView, int *numLocations,
         curr = curr->next;
     }
 
+    *numLocations = i;
+
     return connectedLocations;
 }
 
@@ -718,6 +725,8 @@ LocationID *connectedLocations(GameView currentView, int *numLocations,
 /*
 calculateScore
     Case if Vampire matures
+connectedLocations
+    Case of railModifier > 1
 
 */
 
