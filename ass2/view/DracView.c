@@ -19,6 +19,7 @@ struct dracView {
     int currPlayer;
     int trail[NUM_PLAYERS][TRAIL_SIZE]; 
     int currHealth[NUM_PLAYERS];
+    GameView gameView;
     Map map;
 };
  
@@ -32,6 +33,7 @@ DracView newDracView(char *pastPlays, PlayerMessage messages[])
     int i;
     int j;
     
+    dracView->gameView = gv;
     dracView->currScore = getScore(gv);
     dracView->currRound = getRound(gv);
     dracView->currTurn = getCurrentPlayer(gv);
@@ -47,6 +49,11 @@ DracView newDracView(char *pastPlays, PlayerMessage messages[])
     dracView->draclocation = temptrail[0];
     dracView->map = newMap();
     return dracView;
+
+    for (i = 0; i < TRAIL_SIZE; i++) {
+        dracView->Vamps[i] = 0;
+    }
+    
 }
      
      
@@ -117,6 +124,13 @@ void whatsThere(DracView currentView, LocationID where,
             *numTraps = 1;
         }
     }
+
+    LocationID trail[TRAIL_SIZE] = {};
+    giveMeTheTrail(currentView, PLAYER_DRACULA, trail);
+    for (i = 0; i < TRAIL_SIZE; i++) {
+
+    }
+    printf("*numVamps = %d, *numTraps = %d\n", *numVamps, *numTraps);
     return;
 }
 
@@ -154,8 +168,7 @@ LocationID *whereCanIgo(DracView currentView, int *numLocations, int road, int s
 LocationID *whereCanTheyGo(DracView currentView, int *numLocations,
                            PlayerID player, int road, int rail, int sea)
 {
-    //REPLACE THIS WITH YOUR OWN IMPLEMENTATION
-    return NULL;
+    LocationID from = whereIs(currentView, player);
+    Round round = giveMeTheRound(currentView);
+    return connectedLocations(currentView->gameView, numLocations, from, player, round, road, rail, sea);
 }
-
-
