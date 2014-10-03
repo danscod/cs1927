@@ -23,7 +23,22 @@ struct gameView {
     int currPlayer;
     int trail[NUM_PLAYERS][TRAIL_SIZE]; 
     int currHealth[NUM_PLAYERS];
+    Map map;
     PlayerMessage messages[]; 
+};
+
+typedef struct vNode *VList;
+
+struct vNode {
+   LocationID  v;    // ALICANTE, etc
+   TransportID type; // ROAD, RAIL, BOAT
+   VList       next; // link to next node
+};
+
+struct MapRep {
+   int   nV;         // #vertices
+   int   nE;         // #edges
+   VList connections[NUM_MAP_LOCATIONS]; // array of lists
 };
      
 //Function Prototypes (MUST BE HANDLED CORRECTLY)
@@ -78,6 +93,7 @@ GameView newGameView(char *pastPlays, PlayerMessage messages[])
     for (i = 0; i < TRAIL_SIZE; i++) {
         gameView->trail[PLAYER_DRACULA][i] = trail[i];
     }     
+    gameView->map = newMap();
 
 
     return gameView;
@@ -652,8 +668,49 @@ LocationID *connectedLocations(GameView currentView, int *numLocations,
                                LocationID from, PlayerID player, Round round,
                                int road, int rail, int sea)
 {
-    //REPLACE THIS WITH YOUR OWN IMPLEMENTATION
-    return NULL;
+    //Verify inputs
+    assert(currentView != NULL);
+    assert(numLocations != NULL);
+    assert(from >= 0 && from <= 70);
+    assert(player >= 0 && player <= 4);
+    assert(round >= 0);
+    assert(road == TRUE || road == FALSE);
+    assert(rail == TRUE || rail == FALSE);
+    assert(sea == TRUE || sea == FALSE);
+
+    //Setup Variables
+    printf("numLocations is %p, numLocations is %d\n", numLocations, *numLocations);
+    int arraySize = NUM_MAP_LOCATIONS;
+    LocationID *connectedLocations = malloc(arraySize * sizeof(LocationID));
+    assert(connectedLocations != NULL);
+    connectedLocations[0] = from;
+    int i = 1;  //Counter
+    int railModifier = (round + currentView->currScore) % 4;
+
+    //Navigate through the map array to desired list
+    VList curr = currentView->map->connections[from];
+
+    //Loop through the entire "from" list
+    while (curr != NULL) {
+
+
+        //Add each destination to the array if it is of the correct type
+        if (curr->type == ROAD && road == TRUE) {
+            connectedLocations[i] = curr->v;
+            i++;
+        } else if (curr->type == RAIL && rail == TRUE && player != PLAYER_DRACULA && railModifier >= 1) {
+            connectedLocations[i] = curr->v;
+            i++;
+        } else if (curr->type == BOAT && sea == TRUE) {
+            connectedLocations[i] = curr->v;
+            i++;
+        }
+
+        //Increment
+        curr = curr->next;
+    }
+
+    return connectedLocations;
 }
 
 
@@ -661,12 +718,6 @@ LocationID *connectedLocations(GameView currentView, int *numLocations,
 /*
 calculateScore
     Case if Vampire matures
-calculateTrail
-    Case of invalid locations
-connectedLocations
 
-PROGRAM CURRENTLY PASSES
-    printf("Test basic empty initialisation\n");
-    printf("Test for Dracula trail and basic functions\n");
 */
 
