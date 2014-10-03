@@ -554,7 +554,6 @@ void getHistory(GameView currentView, PlayerID player,
         trail[i] = currentView->trail[player][i];
     }
 
-
 }
 
 //// Functions that query the map to find information about connectivity
