@@ -161,21 +161,6 @@ void calculateTrail (char *pastPlays, PlayerID player, LocationID trail[TRAIL_SI
 
         //Special Handling for non-locations
         //#define in Places.h, lines 106-117
-        printf("tempLocation is: %s\n", tempLocation);
-
-        /*
-        switch (atoi(tempLocation)) {
-            case atoi("C?") : trail[j] = CITY_UNKNOWN; break;
-            case atoi("S?") : trail[j] = SEA_UNKNOWN; break;
-            case atoi("HI") : trail[j] = HIDE; break;
-            case atoi("D1") : trail[j] = DOUBLE_BACK_1; break;
-            case atoi("D2") : trail[j] = DOUBLE_BACK_2; break;
-            case atoi("D3") : trail[j] = DOUBLE_BACK_3; break;
-            case atoi("D4") : trail[j] = DOUBLE_BACK_4; break;
-            case atoi("D5") : trail[j] = DOUBLE_BACK_5; break;
-            case atoi("TP") : trail[j] = TELEPORT; break;
-        }
-        */
 
         if (strncmp(tempLocation, "C?", 2) == 0) {
             trail[j] = CITY_UNKNOWN;
@@ -196,8 +181,6 @@ void calculateTrail (char *pastPlays, PlayerID player, LocationID trail[TRAIL_SI
         } else if (strncmp(tempLocation, "TP", 2) == 0) {
             trail[j] = TELEPORT;
         }
-        //INCOMPLETE
-        //THIS WILL NEED TO BE EXPANDED
 
         j++;
     }
@@ -211,12 +194,6 @@ void calculateTrail (char *pastPlays, PlayerID player, LocationID trail[TRAIL_SI
         tempLocation[0] = pastPlays[LOCATION_CHAR_OFFSET - 1];    
         //Input locationID into array
         trail[j] = abbrevToID(tempLocation);
-    }
-
-    //DEBUG
-    printf("This is the trail for player :%d\n", player);
-    for (i = 0; i < TRAIL_SIZE; i++) {
-        printf("%d, ", trail[i]);
     }
 
 }
@@ -264,23 +241,14 @@ int calculatePlayer (char *pastPlays) {
     //Setup Variables
     assert(pastPlays != NULL);
     int player = 0;
-    int pastPlaysLength = strlen(pastPlays);
-
-    //DEBUG
-    printf("pastPlaysLength is: %d\n", pastPlaysLength);
 
     //Case if first turn
     if (calculateTurn(pastPlays) == 0) {
         return PLAYER_LORD_GODALMING;
     }
 
-
     //The current player is determined by looking at the turn and round
-    printf("Player is: %d, NUM_PLAYERS is: %d\n", player, NUM_PLAYERS);
-    printf("Turn is: %d\n", calculateTurn(pastPlays));
-    printf("Round is: %d\n", calculateRound(pastPlays));
     player = calculateTurn(pastPlays) - (calculateRound(pastPlays) * NUM_PLAYERS);
-    printf("Player is: %d\n", player);
 
     //Adjust to ensure valid players
     if (player == PLAYER_DRACULA + 1) {
@@ -327,13 +295,6 @@ int calculateScore (char *pastPlays) {
 }
 
 // Calculate the health of all Hunters
-/*
-// Hunter Health
-#define GAME_START_HUNTER_LIFE_POINTS   9
-#define LIFE_LOSS_TRAP_ENCOUNTER        2
-#define LIFE_LOSS_DRACULA_ENCOUNTER     4
-#define LIFE_GAIN_REST                  3 
-*/
 int calculateHunterHealth (char *pastPlays, PlayerID player) {
 
     //Setup Variables
@@ -415,13 +376,6 @@ int calculateHunterHealth (char *pastPlays, PlayerID player) {
 }
 
 // Calculate Dracula's Health
-/*
-// Dracula Health
-#define GAME_START_BLOOD_POINTS         40
-#define LIFE_LOSS_HUNTER_ENCOUNTER      10
-#define LIFE_LOSS_SEA                   2
-#define LIFE_GAIN_CASTLE_DRACULA        10
-*/
 int calculateDraculaHealth (char *pastPlays) {
     //Setup Variables
     assert(pastPlays != NULL);
@@ -435,24 +389,13 @@ int calculateDraculaHealth (char *pastPlays) {
     //Dracula begins with 40 "Blood Points" (health)
     int health = GAME_START_BLOOD_POINTS;
 
-    //DEBUG
-    //printf("pastPlaysLength is %d\n", pastPlaysLength);
-
     //Loop through player's turns
     for (j = 0; j < pastPlaysLength; j++) {
-
-        //DEBUG
-        printf("j is: %d\n", j);
 
         //Keep moving if not the start of a turn
         if (pastPlays[j] != ' ') {
             continue;
         }
-
-        //DEBUG
-        printf("BEGIN TURN: j is: %d, Dracula's Health is: %d\n", j, health);
-        //DEBUG
-        printf("pastPlaysLength is %d, pastPlays is: %s\n", pastPlaysLength, pastPlays);
 
         //Loop through the Action phase
         for (i = TRAP_CHAR_OFFSET; i < MAX_TRAP_LENGTH; i++) {
@@ -460,7 +403,6 @@ int calculateDraculaHealth (char *pastPlays) {
             //If a hunter encounters Dracula he loses 10 blood points
             if (pastPlays[j + i] == 'D') {
                 health = health - LIFE_LOSS_HUNTER_ENCOUNTER;
-                printf("LIFE_LOSS_HUNTER_ENCOUNTER: Dracula's health is: %d\n", health);
                 if (health < 0) {
                     return 0;
                 }
@@ -469,12 +411,8 @@ int calculateDraculaHealth (char *pastPlays) {
 
         //Keep moving if not the player in question
         if (pastPlays[j + 1] != 'D') {
-            printf("END TURN EARLY\n");
             continue;
         }        
-
-        //DEBUG
-        printf("Dracula is being checked for LIFE_GAIN_CASTLE_DRACULA\n");
 
         //Dracula regains 10 blood points if he is in Castle Dracula at the end of his turn
         if (pastPlays[j + 1 + LOCATION_CHAR_OFFSET] == 'D' && pastPlays[j + 1 + LOCATION_CHAR_OFFSET - 1] == 'C') {
@@ -482,28 +420,12 @@ int calculateDraculaHealth (char *pastPlays) {
                 return 0;
             }
             health = health + LIFE_GAIN_CASTLE_DRACULA;
-            printf("LIFE_GAIN_CASTLE_DRACULA: Dracula's health is: %d\n", health);
         }
 
-        //DEBUG
-        printf("Dracula is being checked for LIFE_LOSS_SEA\n");
-        //DEBUG
-        printf("pastPlaysLength is %d, pastPlays is: %s\n", pastPlaysLength, pastPlays);
-        printf("MAGIC 63 ZONE: Dracula's Health is: %d\n", health);
-
-        pastPlaysLength = strlen(pastPlays);
         //Determine Dracula's location
         //Store location initials temporarily
-        printf("MAGIC 63 ZONE A: Dracula's Health is: %d\n", health);
         tempLocation[1] = pastPlays[j + 1 + LOCATION_CHAR_OFFSET];
-        printf("MAGIC 63 ZONE B: Dracula's Health is: %d\n", health);
         tempLocation[0] = pastPlays[j + 1 + LOCATION_CHAR_OFFSET - 1];  
-        printf("MAGIC 63 ZONE C: Dracula's Health is: %d\n", health);
-        //DEBUG
-        pastPlaysLength = strlen(pastPlays);
-        printf("after storing location initials: pastPlaysLength is %d, \npastPlays is: %s\n", pastPlaysLength, pastPlays);
-
-        printf("MAGIC 63 ZONE: Dracula's Health is: %d\n", health);
         //Obtain useful LocationID
         tempLocationID = abbrevToID(tempLocation);
 
@@ -528,42 +450,24 @@ int calculateDraculaHealth (char *pastPlays) {
             tempLocationID = TELEPORT;
         }
 
-        printf("MAGIC 63 ZONE: Dracula's Health is: %d\n", health);
-
-        //DEBUG
-        printf("before building Dracula's Trail: pastPlaysLength is %d, pastPlays is: %s\n", pastPlaysLength, pastPlays);
-        //Build Dracula's Trail
-        calculateTrail(pastPlays, PLAYER_DRACULA, trail);
-        //DEBUG
-        printf("after building Dracula's Trail: pastPlaysLength is %d, pastPlays is: %s\n", pastPlaysLength, pastPlays);
-
-        //DEBUG
-        printf("MAGIC 63 ZONE: Dracula's Health is: %d\n", health);
-
-        printf("Dracula Health Sea Errors\n");
-        printf("tempLocationID is: %d, tempLocation is %s\n", tempLocationID, tempLocation);
-
         //Dracula loses 2 blood points if he is at sea at the end of his turn
         if (idToType(tempLocationID) == SEA || tempLocationID == SEA_UNKNOWN) {
             health = health - LIFE_LOSS_SEA;
             if (health < 0) {
                 return 0;
             }
-            printf("check 1\n");
         //Case if Dracula hid while at sea
         } else if (tempLocationID == HIDE && idToType(trail[1]) == SEA) {
             health = health - LIFE_LOSS_SEA;
             if (health < 0) {
                 return 0;
             }
-            printf("check 2\n");
         //Case if Dracula Doubled-Back to sea
         } else if (tempLocationID == DOUBLE_BACK_1 && (idToType(trail[1]) == SEA || trail[1] == SEA_UNKNOWN)) {
             health = health - LIFE_LOSS_SEA;
             if (health < 0) {
                 return 0;
             }
-            printf("check 3\n");
         } else if (tempLocationID == DOUBLE_BACK_2 && (idToType(trail[2]) == SEA || trail[2] == SEA_UNKNOWN)) {
             health = health - LIFE_LOSS_SEA;
             if (health < 0) {
@@ -573,25 +477,18 @@ int calculateDraculaHealth (char *pastPlays) {
             health = health - LIFE_LOSS_SEA;
             if (health < 0) {
                 return 0;
-            printf("check 4\n");
             }
         } else if (tempLocationID == DOUBLE_BACK_4 && (idToType(trail[4]) == SEA || trail[4] == SEA_UNKNOWN)) {
             health = health - LIFE_LOSS_SEA;
             if (health < 0) {
                 return 0;
-            printf("check 5\n");
             }
         } else if (tempLocationID == DOUBLE_BACK_5 && (idToType(trail[5]) == SEA || trail[5] == SEA_UNKNOWN)) {
             health = health - LIFE_LOSS_SEA;
             if (health < 0) {
                 return 0;
             }
-            printf("check 6\n");
         }
-        printf("No longer check SEA\n");
-
-        //DEBUG
-        printf("EDN TURN: j is: %d, Dracula's Health is: %d\n", j, health);
 
     }
 
@@ -627,11 +524,7 @@ int getHealth(GameView currentView, PlayerID player)
 {
     assert(currentView != NULL);
     assert(player >= 0 && player <= 4);
-    //DEBUG
-    int i = 0;
-    for (i = 0; i < NUM_PLAYERS; i++) {
-        printf("Health of player %d is: %d\n", i, currentView->currHealth[i]);
-    }
+
     return currentView->currHealth[player];
 }
 
@@ -640,8 +533,7 @@ LocationID getLocation(GameView currentView, PlayerID player)
 {
     assert(currentView != NULL);
     assert(player >= 0 && player <= 4);
-    //DEBUG
-    printf("Location of player %d is: %d\n", player, currentView->trail[player][0]);
+
     return currentView->trail[player][0];
 }
 
@@ -684,7 +576,6 @@ LocationID *connectedLocations(GameView currentView, int *numLocations,
     assert(sea == TRUE || sea == FALSE);
 
     //Setup Variables
-    printf("numLocations is %p, numLocations is %d\n", numLocations, *numLocations);
     LocationID *connectedLocations = malloc(NUM_MAP_LOCATIONS * sizeof(LocationID));
     assert(connectedLocations != NULL);
     connectedLocations[0] = from;
@@ -723,10 +614,7 @@ LocationID *connectedLocations(GameView currentView, int *numLocations,
 
 //INCOMPLETE
 /*
-calculateScore
-    Case if Vampire matures
 connectedLocations
     Case of railModifier > 1
-
 */
 
