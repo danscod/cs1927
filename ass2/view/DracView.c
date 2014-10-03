@@ -160,6 +160,7 @@ LocationID *whereCanIgo(DracView currentView, int *numLocations, int road, int s
 {
     LocationID from = whereIs(currentView, PLAYER_DRACULA);
     Round round = giveMeTheRound(currentView);
+    int rail = 0;
     return connectedLocations(currentView->gameView, numLocations, from, PLAYER_DRACULA, round, road, rail, sea);
 }
 
