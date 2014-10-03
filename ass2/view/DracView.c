@@ -149,6 +149,8 @@ void giveMeTheTrail(DracView currentView, PlayerID player,
     for (i = 0; i < TRAIL_SIZE; i++) {
         trail[i] = currentView->trail[player][i];
     }
+
+
 }
 
 //// Functions that query the map to find information about connectivity
@@ -156,12 +158,9 @@ void giveMeTheTrail(DracView currentView, PlayerID player,
 // What are my (Dracula's) possible next moves (locations)
 LocationID *whereCanIgo(DracView currentView, int *numLocations, int road, int sea)
 {
-    assert(currentView != NULL);
-    assert(numLocations != NULL);
-    assert(road == TRUE || road == FALSE);
-    assert(sea == TRUE || sea == FALSE);
-    
-    return NULL;
+    LocationID from = whereIs(currentView, PLAYER_DRACULA);
+    Round round = giveMeTheRound(currentView);
+    return connectedLocations(currentView->gameView, numLocations, from, PLAYER_DRACULA, round, road, rail, sea);
 }
 
 // What are the specified player's next possible moves
