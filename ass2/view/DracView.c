@@ -3,11 +3,14 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
+#include <string.h>
 #include "Globals.h"
 #include "Game.h"
 #include "GameView.h"
 #include "DracView.h"
 #include "Map.h" //... if you decide to use the Map ADT
+
+#define LOCATION_CHAR_OFFSET 2
 
 struct dracView {
     int draclocation;
@@ -48,12 +51,44 @@ DracView newDracView(char *pastPlays, PlayerMessage messages[])
     }
     dracView->draclocation = temptrail[0];
     dracView->map = newMap();
-    return dracView;
 
-    for (i = 0; i < TRAIL_SIZE; i++) {
-        dracView->Vamps[i] = 0;
+    char tempLocation[2] = {'0'};
+    int tempLocationID = 0;
+    int pastPlaysLength = strlen(pastPlays);
+    for (i = pastPlaysLength, j = 0; i >= 0 && j < TRAIL_SIZE; i--) {
+
+        //Keep moving if not the start of a turn
+        if (pastPlays[i] != ' ') {
+            continue;
+        }
+
+        //Keep moving if not the player in question
+        if (pastPlays[i + 1] != 'D') {
+            continue;
+        }
+
+        //Should now always have the correct player, start of turn
+        //Store location initials temporarily
+        tempLocation[1] = pastPlays[i + 1 + LOCATION_CHAR_OFFSET];
+        tempLocation[0] = pastPlays[i + 1 + LOCATION_CHAR_OFFSET - 1];    
+
+        //Input locationID into array - special handling for non-locations
+        tempLocationID = abbrevToID(tempLocation);
+
+        //Check if a Vampire was placed
+        if (pastPlays[i + 5] == 'V') {
+            dracView->Vamps[j] = tempLocationID;
+        }
+
+        //Check if a Trap was placed
+        if (pastPlays[i + 4] == 'T') {
+            dracView->Traps[j] = tempLocationID;
+        }    
+
+        j++;
     }
     
+    return dracView;
 }
      
      
@@ -85,7 +120,6 @@ int giveMeTheScore(DracView currentView)
 int howHealthyIs(DracView currentView, PlayerID player)
 {
     assert(currentView != NULL);
-    printf("HEALTH: %d", currentView->currHealth[player]);
     return currentView->currHealth[player];
 }
 
@@ -130,7 +164,6 @@ void whatsThere(DracView currentView, LocationID where,
     for (i = 0; i < TRAIL_SIZE; i++) {
 
     }
-    printf("*numVamps = %d, *numTraps = %d\n", *numVamps, *numTraps);
     return;
 }
 
