@@ -30,6 +30,9 @@ struct dracView {
 // Creates a new DracView to summarise the current state of the game
 DracView newDracView(char *pastPlays, PlayerMessage messages[])
 {   
+    assert(messages !=NULL);
+    assert(pastPlays != NULL);
+
     GameView gv = newGameView(pastPlays, messages);
     DracView dracView = malloc(sizeof(struct dracView));
     int temptrail[TRAIL_SIZE];
@@ -127,10 +130,7 @@ int howHealthyIs(DracView currentView, PlayerID player)
 LocationID whereIs(DracView currentView, PlayerID player)
 {
     assert(currentView != NULL);
-    int playerloc;
-    playerloc = currentView->trail[player][0];
-    return playerloc;
-}
+    return currentView->trail[player][0];}
 
 // Get the most recent move of a given player
 void lastMove(DracView currentView, PlayerID player,
@@ -182,7 +182,6 @@ void giveMeTheTrail(DracView currentView, PlayerID player,
     for (i = 0; i < TRAIL_SIZE; i++) {
         trail[i] = currentView->trail[player][i];
     }
-
 
 }
 

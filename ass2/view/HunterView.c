@@ -1,25 +1,56 @@
 // HunterView.c ... HunterView ADT implementation
 
 #include <stdlib.h>
+#include <stdio.h>
 #include <assert.h>
+#include <string.h>
 #include "Globals.h"
 #include "Game.h"
 #include "GameView.h"
 #include "HunterView.h"
-// #include "Map.h" ... if you decide to use the Map ADT
+#include "Map.h" //... if you decide to use the Map ADT
      
 struct hunterView {
-    //REPLACE THIS WITH YOUR OWN IMPLEMENTATION
-    int hello;
+    int hunterlocation;
+    int currScore;
+    int currRound;
+    int currTurn;
+    int currPlayer;
+    int trail[NUM_PLAYERS][TRAIL_SIZE]; 
+    int currHealth[NUM_PLAYERS];
+    GameView gameView;
+    Map map;
 };
-     
+ 
 
 // Creates a new HunterView to summarise the current state of the game
 HunterView newHunterView(char *pastPlays, PlayerMessage messages[])
 {
-    //REPLACE THIS WITH YOUR OWN IMPLEMENTATION
+    assert(messages !=NULL);
+    assert(pastPlays != NULL);
+
+    GameView gv = newGameView(pastPlays, messages);
     HunterView hunterView = malloc(sizeof(struct hunterView));
-    hunterView->hello = 42;
+    int temptrail[TRAIL_SIZE];
+    int i;
+    int j;
+    
+    hunterView->gameView = gv;
+    hunterView->currScore = getScore(gv);
+    hunterView->currRound = getRound(gv);
+    hunterView->currTurn = getCurrentPlayer(gv);
+    for (i = 0; i < NUM_PLAYERS ; i++){
+        hunterView->currHealth[i] = getHealth(gv, i);
+    }
+    for (i=0; i < NUM_PLAYERS ; i++){
+        getHistory(gv, i, temptrail);
+        for(j=0 ; j < TRAIL_SIZE ; j++){
+            hunterView->trail[i][j] = temptrail[j];
+        }
+    }
+    hunterView->hunterlocation = temptrail[0];
+    hunterView->map = newMap();
+
     return hunterView;
 }
      
@@ -27,7 +58,7 @@ HunterView newHunterView(char *pastPlays, PlayerMessage messages[])
 // Frees all memory previously allocated for the HunterView toBeDeleted
 void disposeHunterView(HunterView toBeDeleted)
 {
-    //COMPLETE THIS IMPLEMENTATION
+    assert(toBeDeleted != NULL);
     free( toBeDeleted );
 }
 
@@ -37,60 +68,68 @@ void disposeHunterView(HunterView toBeDeleted)
 // Get the current round
 Round giveMeTheRound(HunterView currentView)
 {
-    //REPLACE THIS WITH YOUR OWN IMPLEMENTATION
-    return 0;
+    assert(currentView != NULL);
+    return currentView->currRound;
 }
 
 // Get the id of current player
 PlayerID whoAmI(HunterView currentView)
 {
-    //REPLACE THIS WITH YOUR OWN IMPLEMENTATION
-    return 0;
+    return currentView->currPlayer;
 }
 
 // Get the current score
 int giveMeTheScore(HunterView currentView)
 {
-    //REPLACE THIS WITH YOUR OWN IMPLEMENTATION
-    return 0;
+    assert(currentView != NULL);
+    return currentView->currScore;
 }
 
 // Get the current health points for a given player
 int howHealthyIs(HunterView currentView, PlayerID player)
 {
-    //REPLACE THIS WITH YOUR OWN IMPLEMENTATION
-    return 0;
+    assert(currentView != NULL);
+    return currentView->currHealth[player];
 }
 
 // Get the current location id of a given player
 LocationID whereIs(HunterView currentView, PlayerID player)
 {
-    //REPLACE THIS WITH YOUR OWN IMPLEMENTATION
-    return 0;
+    assert(currentView != NULL);
+    return(currentView->trail[player][0]);
 }
 
 //// Functions that return information about the history of the game
 
 // Fills the trail array with the location ids of the last 6 turns
-void giveMeTheTrail(HunterView currentView, PlayerID player,
-                            LocationID trail[TRAIL_SIZE])
+void giveMeTheTrail(HunterView currentView, PlayerID player, LocationID trail[TRAIL_SIZE])
 {
-    //REPLACE THIS WITH YOUR OWN IMPLEMENTATION
+    assert(currentView != NULL);
+    assert(trail != NULL);
+    assert(player >= 0 && player <= 4);
+    int i = 0;  //Counter
+
+    //Loop through currentView trail and fill given trail
+    for (i = 0; i < TRAIL_SIZE; i++) {
+        trail[i] = currentView->trail[player][i];
+    }
 }
 
 //// Functions that query the map to find information about connectivity
 
 // What are my possible next moves (locations)
-LocationID *whereCanIgo(HunterView currentView, int *numLocations, int road, int sea)
+LocationID *whereCanIgo(HunterView currentView, int *numLocations, int road,int rail, int sea)
 {
-    //REPLACE THIS WITH YOUR OWN IMPLEMENTATION
-    return NULL;
+    PlayerID player = whoAmI(currentView);
+    LocationID from = whereIs(currentView, player);
+    Round round = giveMeTheRound(currentView);
+    return connectedLocations(currentView->gameView, numLocations, from, player, round, road, rail, sea);
 }
 
 // What are the specified player's next possible moves
-LocationID *whereCanTheyGo(HunterView currentView, int *numLocations,
-                           PlayerID player, int road, int rail, int sea)
+LocationID *whereCanTheyGo(HunterView currentView, int *numLocations, PlayerID player, int road, int rail, int sea)
 {
-    //REPLACE THIS WITH YOUR OWN IMPLEMENTATION
-    return NULL;
+    LocationID from = whereIs(currentView, player);
+    Round round = giveMeTheRound(currentView);
+    return connectedLocations(currentView->gameView, numLocations, from, player, round, road, rail, sea);
 }
