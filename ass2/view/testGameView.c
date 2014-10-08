@@ -110,6 +110,50 @@ int main()
     printf("passed\n");
     disposeGameView(gv);
 
+    //Custom Tests
+
+    //Test for extended rail connections (Dan Scodellaro)
+    printf("Test for extended rail connections\n");
+    //int size, seen[NUM_MAP_LOCATIONS], *edges;
+    gv = newGameView("GAL.... SLO.... ", messages1);    
+    printf("Checking London rail connections (extended)\n");
+    edges = connectedLocations(gv,&size,LONDON,PLAYER_DR_SEWARD,0,0,1,0);
+    for (i = 0; i < size; i++) seen[edges[i]] = 1;
+    int flag = 0;
+    //Testing
+    if (size != 5) {
+        printf("The test 'assert(size == 5)' has failed (Size is: %d)\n", size);
+        flag = 1;
+    }
+    if (seen[LONDON] == 0) {
+        printf("The test 'assert(seen[LONDON])' has failed\n");
+        flag = 1;
+    }
+    if (seen[SWANSEA] == 0) {
+        printf("The test 'assert(seen[SWANSEA])' has failed\n");
+        flag = 1;
+    }
+    if (seen[MANCHESTER] == 0) {
+        printf("The test 'assert(seen[MANCHESTER])' has failed\n");
+        flag = 1;
+    }
+    if (seen[LIVERPOOL] == 0) {
+        printf("The test 'assert(seen[LIVERPOOL])' has failed\n");
+        flag = 1;
+    }
+    if (seen[EDINBURGH] == 0) {
+        printf("The test 'assert(seen[EDINBURGH])' has failed\n");
+        flag = 1;
+    } 
+    //New Content
+    free(edges);
+    if (flag == 0) {    
+        printf("passed\n");
+    } else {
+        printf("failed\n");
+    }
+    disposeGameView(gv);
+
     return 0;
 }
 
