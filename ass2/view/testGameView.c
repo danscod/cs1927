@@ -115,9 +115,10 @@ int main()
     //Test for extended rail connections (Dan Scodellaro)
     printf("Test for extended rail connections\n");
     //int size, seen[NUM_MAP_LOCATIONS], *edges;
-    gv = newGameView("GAL.... SLO.... ", messages1);    
+    gv = newGameView("GAL.... SLO.... HLO.... ", messages1);    
     printf("Checking London rail connections (extended)\n");
-    edges = connectedLocations(gv,&size,LONDON,PLAYER_DR_SEWARD,0,0,1,0);
+    edges = connectedLocations(gv,&size,LONDON,PLAYER_VAN_HELSING,getRound(gv),0,1,0);
+    //printf("Round is %d, PlayerID is %d, railModifier is %d\n", getRound(gv), PLAYER_VAN_HELSING, (getRound(gv) + PLAYER_VAN_HELSING) % 4);
     for (i = 0; i < size; i++) seen[edges[i]] = 1;
     int flag = 0;
     //Testing
@@ -151,6 +152,61 @@ int main()
         printf("passed\n");
     } else {
         printf("failed\n");
+    }
+    disposeGameView(gv);
+
+    //Test for duplicates in connectedLocations (Dan Scodellaro)
+    printf("Test for duplicated connections\n");
+    //int size, seen[NUM_MAP_LOCATIONS], *edges;
+    gv = newGameView("GAL.... SLO.... HLO.... ", messages1);    
+    printf("Checking London rail connections (extended)\n");
+    edges = connectedLocations(gv,&size,LONDON,PLAYER_VAN_HELSING,getRound(gv),1,1,1);
+    //printf("Round is %d, PlayerID is %d, railModifier is %d\n", getRound(gv), PLAYER_VAN_HELSING, (getRound(gv) + PLAYER_VAN_HELSING) % 4);
+    for (i = 0; i < size; i++) seen[edges[i]] = 1;
+    flag = 0;
+    //Testing
+    if (size != 7) {
+        printf("The test 'assert(size == 7)' has failed (Size is: %d)\n", size);
+        flag = 1;
+    }
+    if (seen[LONDON] == 0) {
+        printf("The test 'assert(seen[LONDON])' has failed\n");
+        flag = 1;
+    }
+    if (seen[SWANSEA] == 0) {
+        printf("The test 'assert(seen[SWANSEA])' has failed\n");
+        flag = 1;
+    }
+    if (seen[MANCHESTER] == 0) {
+        printf("The test 'assert(seen[MANCHESTER])' has failed\n");
+        flag = 1;
+    }
+    if (seen[LIVERPOOL] == 0) {
+        printf("The test 'assert(seen[LIVERPOOL])' has failed\n");
+        flag = 1;
+    }
+    if (seen[EDINBURGH] == 0) {
+        printf("The test 'assert(seen[EDINBURGH])' has failed\n");
+        flag = 1;
+    } 
+    if (seen[ENGLISH_CHANNEL] == 0) {
+        printf("The test 'assert(seen[ENGLISH_CHANNEL])' has failed\n");
+        flag = 1;
+    }
+    if (seen[PLYMOUTH] == 0) {
+        printf("The test 'assert(seen[PLYMOUTH])' has failed\n");
+        flag = 1;
+    }
+    //New Content
+    free(edges);
+    if (flag == 0) {    
+        printf("passed\n");
+    } else {
+        printf("failed\n");
+        printf("Take a look to see if there are any duplicates (duplicates should not exist)\n");
+        for (i = 0; i < size; i++) {
+            printf("edges[%d] evaluates to %d\n", i, edges[i]);
+        }
     }
     disposeGameView(gv);
 

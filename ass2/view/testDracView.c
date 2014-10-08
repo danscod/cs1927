@@ -114,9 +114,9 @@ int main()
     //Test for extended rail connections (Dan Scodellaro)
     printf("Test for extended rail connections\n");
     //int size, seen[NUM_MAP_LOCATIONS], *edges;
-    dv = newDracView("GAL.... SLO.... ", messages1);    
+    dv = newDracView("GAL.... SLO.... HLO.... ", messages1);    
     printf("Checking London rail connections (extended)\n");
-    edges = whereCanTheyGo(dv,&size,PLAYER_DR_SEWARD,0,1,0);
+    edges = whereCanTheyGo(dv,&size,PLAYER_VAN_HELSING,0,1,0);
     for (i = 0; i < size; i++) seen[edges[i]] = 1;
     int flag = 0;
     //Testing
@@ -152,6 +152,61 @@ int main()
         printf("failed\n");
     }
     disposeDracView(dv);
+
+    //Test for duplicates in connectedLocations (Dan Scodellaro)
+    printf("Test for duplicated connections\n");
+    //int size, seen[NUM_MAP_LOCATIONS], *edges;
+    dv = newDracView("GAL.... SLO.... HLO.... ", messages1);    
+    printf("Checking London connections (extended)\n");
+    edges = whereCanTheyGo(dv,&size,PLAYER_VAN_HELSING,1,1,1);
+    for (i = 0; i < size; i++) seen[edges[i]] = 1;
+    flag = 0;
+    //Testing
+    if (size != 7) {
+        printf("The test 'assert(size == 7)' has failed (Size is: %d)\n", size);
+        flag = 1;
+    }
+    if (seen[LONDON] == 0) {
+        printf("The test 'assert(seen[LONDON])' has failed\n");
+        flag = 1;
+    }
+    if (seen[SWANSEA] == 0) {
+        printf("The test 'assert(seen[SWANSEA])' has failed\n");
+        flag = 1;
+    }
+    if (seen[MANCHESTER] == 0) {
+        printf("The test 'assert(seen[MANCHESTER])' has failed\n");
+        flag = 1;
+    }
+    if (seen[LIVERPOOL] == 0) {
+        printf("The test 'assert(seen[LIVERPOOL])' has failed\n");
+        flag = 1;
+    }
+    if (seen[EDINBURGH] == 0) {
+        printf("The test 'assert(seen[EDINBURGH])' has failed\n");
+        flag = 1;
+    } 
+    if (seen[ENGLISH_CHANNEL] == 0) {
+        printf("The test 'assert(seen[ENGLISH_CHANNEL])' has failed\n");
+        flag = 1;
+    }
+    if (seen[PLYMOUTH] == 0) {
+        printf("The test 'assert(seen[PLYMOUTH])' has failed\n");
+        flag = 1;
+    }
+    //New Content
+    free(edges);
+    if (flag == 0) {    
+        printf("passed\n");
+    } else {
+        printf("failed\n");
+        printf("Take a look to see if there are any duplicates (duplicates should not exist)\n");
+        for (i = 0; i < size; i++) {
+            printf("edges[%d] evaluates to %d\n", i, edges[i]);
+        }
+    }
+    disposeDracView(dv);
+
     return 0;
 }
 
