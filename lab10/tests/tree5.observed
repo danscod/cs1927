@@ -1,12 +1,24 @@
 Tree:
-    5
-   / \
-  3   7
- /     \
-1       9
+                9
+               /
+              8
+             /
+            7
+           /
+          6
+         /
+        5
+       /
+      4
+     /
+    3
+   /
+  2
+ /
+1
 
-#nodes = 5,  #leaves = 2
-Infix  : 1 3 5 7 9 
-Prefix : 5 3 1 7 9 
-Postfix: 1 3 9 7 5 
-ByLevel: 5 3 7 1 9 
+#nodes = 9,  #leaves = 1
+Infix  : 1 2 3 4 5 6 7 8 9 
+Prefix : 9 8 7 6 5 4 3 2 1 
+Postfix: 1 2 3 4 5 6 7 8 9 
+ByLevel: 9 8 7 6 5 4 3 2 1 

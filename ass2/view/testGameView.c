@@ -210,6 +210,140 @@ int main()
     }
     disposeGameView(gv);
 
+    // ADDED TESTS ---------------- (Christine)
+
+
+    //test for traps 
+    printf("Test for Dracula Placing Trap and Hunter Encountering Trap\n");
+    PlayerMessage messages6[] = {
+    "This","Is","So","Annoying","To",
+    "Make","Random","Player","Messages","MUAHAH",
+    "Last", "Line", "Thank", "Goodness","DONE"};
+    gv = newGameView("GBD.... SBD.... HBD.... MBD.... DPRT... "
+                     "GVI.... SVI.... HSZ.... MSZ.... DBRT... "
+                     "GPRT... SPR.... HBD.... MBD.... DNU....", messages6);
+    assert(getHealth(gv, PLAYER_LORD_GODALMING) == GAME_START_HUNTER_LIFE_POINTS - 2);
+    assert(getHealth(gv, PLAYER_DR_SEWARD) == GAME_START_HUNTER_LIFE_POINTS);
+    assert(getHealth(gv, PLAYER_MINA_HARKER) == GAME_START_HUNTER_LIFE_POINTS);
+    assert(getHealth(gv, PLAYER_VAN_HELSING) == GAME_START_HUNTER_LIFE_POINTS);
+    assert(getHealth(gv, PLAYER_DRACULA) == GAME_START_BLOOD_POINTS);
+    assert(getScore(gv) == GAME_START_SCORE - 3);
+    printf("passed\n");
+    disposeGameView(gv);
+
+
+//  //test for immature vampire killed
+    printf("Test for Immature Vampire Killed\n");
+    PlayerMessage messages7[] = {
+    "This","Is","So","Annoying","To",
+    "Make","Random","Player","Messages","MUAHAH",
+    "Last", "Line", "Thank", "Goodness","DONE"};
+    gv = newGameView("GBD.... SBD.... HBD.... MBD.... DPR.V.. "
+                     "GVI.... SVI.... HSZ.... MSZ.... DBR.... "
+                     "GPRV...", messages7);
+    assert(getHealth(gv, PLAYER_LORD_GODALMING) == GAME_START_HUNTER_LIFE_POINTS);
+    assert(getHealth(gv, PLAYER_DR_SEWARD) == GAME_START_HUNTER_LIFE_POINTS);
+    assert(getHealth(gv, PLAYER_MINA_HARKER) == GAME_START_HUNTER_LIFE_POINTS);
+    assert(getHealth(gv, PLAYER_VAN_HELSING) == GAME_START_HUNTER_LIFE_POINTS);
+    assert(getHealth(gv, PLAYER_DRACULA) == GAME_START_BLOOD_POINTS);
+    assert(getScore(gv) == GAME_START_SCORE - 2);
+    printf("passed\n");
+    disposeGameView(gv);
+
+//  //test for vampire matured
+    printf("Test for Vampire Maturing\n");
+    PlayerMessage messages8[19*5]={""};
+    gv = newGameView(
+        "GBD.... SBD.... HBD.... MBD.... DPR.... "
+        "GVI.... SVI.... HSZ.... MSZ.... DBR.... "
+        "GBD.... SBD.... HBD.... MBD.... DPR.... "
+        "GVI.... SVI.... HSZ.... MSZ.... DBR.... "
+        "GBD.... SBD.... HBD.... MBD.... DPR.... "
+        "GVI.... SVI.... HSZ.... MSZ.... DBR.... "
+        "GBD.... SBD.... HBD.... MBD.... DPR.... "
+        "GVI.... SVI.... HSZ.... MSZ.... DBR.... "
+        "GBD.... SBD.... HBD.... MBD.... DPR.... "
+        "GVI.... SVI.... HSZ.... MSZ.... DBR.... "
+        "GBD.... SBD.... HBD.... MBD.... DPR.... "
+        "GVI.... SVI.... HSZ.... MSZ.... DBR.... "
+        "GBD.... SBD.... HBD.... MBD.... DPR.V.. " //round 13 vampire put
+        "GVI.... SVI.... HSZ.... MSZ.... DBR.... "
+        "GBD.... SBD.... HBD.... MBD.... DPR.... "
+        "GVI.... SVI.... HSZ.... MSZ.... DBR.... "
+        "GBD.... SBD.... HBD.... MBD.... DPR.... "
+        "GVI.... SVI.... HSZ.... MSZ.... DBR.... "
+        "GBD.... SBD.... HBD.... MBD.... DPR..V.", messages8); //round 19 
+    assert(getHealth(gv, PLAYER_LORD_GODALMING) == GAME_START_HUNTER_LIFE_POINTS);
+    assert(getHealth(gv, PLAYER_DR_SEWARD) == GAME_START_HUNTER_LIFE_POINTS);
+    assert(getHealth(gv, PLAYER_MINA_HARKER) == GAME_START_HUNTER_LIFE_POINTS);
+    assert(getHealth(gv, PLAYER_VAN_HELSING) == GAME_START_HUNTER_LIFE_POINTS);
+    assert(getHealth(gv, PLAYER_DRACULA) == GAME_START_BLOOD_POINTS);
+    assert(getScore(gv) == GAME_START_SCORE - 19 - 13);
+    printf("passed\n");
+    disposeGameView(gv);
+
+//  //test for hunter recovering health in city
+    printf("Test for Hunter Recovering Health in city\n");
+    PlayerMessage messages9[] = {
+    "This","Is","So","Annoying","To",
+    "Make","Random","Player","Messages","MUAHAH",
+    "Last", "Line", "Thank", "Goodness","DONE",
+    "one","more","line","till","REVOLUTIONWEWILLNIPITINTHEBUD",
+    "jks","another","line","till","REVOLUTIONWEWILLNIPITINTHEBUD"};
+    gv = newGameView("GBD.... SBD.... HBD.... MBD.... DPRT... "
+                     "GVI.... SVI.... HVI.... MSZ.... DBRT... "
+                     "GBD.... SPR.... HPR.... MBD.... DNU.... " // -2  health
+                     "GSZ.... SBR.... HBR.... MBD.... DMU.... " // -2  health
+                     "GBD.... SBD.... HNU.... MBD.... DZA...." // +3 health
+                     , messages9);
+    assert(getHealth(gv, PLAYER_LORD_GODALMING) == GAME_START_HUNTER_LIFE_POINTS);
+    assert(getHealth(gv, PLAYER_DR_SEWARD) == GAME_START_HUNTER_LIFE_POINTS -1);
+    assert(getHealth(gv, PLAYER_MINA_HARKER) == GAME_START_HUNTER_LIFE_POINTS);
+    assert(getHealth(gv, PLAYER_VAN_HELSING) == GAME_START_HUNTER_LIFE_POINTS);
+    assert(getHealth(gv, PLAYER_DRACULA) == GAME_START_BLOOD_POINTS);
+    assert(getScore(gv) == GAME_START_SCORE - 5);
+    printf("passed\n");
+    disposeGameView(gv);    
+
+//  //test for hunter dying
+    printf("Test for Hunter dying\n");
+    PlayerMessage messages10[] = {
+    "This","Is","So","Annoying","To",
+    "Make","Random","Player","Messages","MUAHAH",
+    "Last", "Line", "Thank", "Goodness","DONE",
+    "one","more","line"};
+    gv = newGameView("GBD.... SBD.... HBD.... MBD.... DPRT... "
+                     "GVI.... SVI.... HVI.... MSZ.... DD1T... "
+                     "GBD.... SBD.... HPR.... MBD.... DBET... " 
+                     "GVI.... SVI.... HBE...." 
+                     , messages10);
+    assert(getHealth(gv, PLAYER_VAN_HELSING) == 0);
+    assert(getScore(gv) == GAME_START_SCORE -3-6);
+    printf("passed\n");
+    disposeGameView(gv); 
+
+//  //test for hunter dying, transported to hospital, recovered
+    printf("Test for Hunter dying, transported to hospital, recovering\n");
+    PlayerMessage messages11[] = {
+    "This","Is","So","Annoying","To",
+    "Make","Random","Player","Messages","MUAHAH",
+    "Last", "Line", "Thank", "Goodness","DONE",
+    "one","more","line","minoy","draculo",
+    "whensuddenly","VOILA","RESURRECTION"};
+    gv = newGameView("GBD.... SBD.... HBD.... MBD.... DPRT... "
+                     "GVI.... SVI.... HVI.... MSZ.... DD1T... "
+                     "GBD.... SBD.... HPR.... MBD.... DBET... " 
+                     "GVI.... SVI.... HBE.... MSZ.... DPR.... " 
+                     "GBD.... SBD.... HPI...."
+                     , messages11);
+    assert(getHealth(gv, PLAYER_VAN_HELSING) == 9);
+    assert(getLocation(gv, PLAYER_VAN_HELSING) == 60);
+    printf("passed\n");
+    disposeGameView(gv); 
+
+
+//----------------------------
+
     return 0;
 }
 

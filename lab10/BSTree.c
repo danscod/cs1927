@@ -153,15 +153,15 @@ int BSTreeNumNodes(BSTree t)
 // count #leaves in BSTree
 int BSTreeNumLeaves(BSTree t)
 {
-    if (t == NULL)
+    if (t == NULL) //Case if empty tree
     {
         return 0;
     }
-    else if (t != NULL && (t->left) == NULL && (t->right) == NULL)
+    else if (t != NULL && (t->left) == NULL && (t->right) == NULL) //Case if leaf
     {
         return 1;
     }
-    else
+    else //Case if node
     {
         return 0 + BSTreeNumLeaves(t->left) + BSTreeNumLeaves(t->right);
     }

@@ -74,23 +74,23 @@ static VList insertVList(VList L, Location v, Transport type)
 
 static int inVList(VList L, Location v, Transport type)
 {
-   VList cur;
-   for (cur = L; cur != NULL; cur = cur->next) {
-      if (cur->v == v && cur->type == type) return 1;
-   }
-   return 0;
+	VList cur;
+	for (cur = L; cur != NULL; cur = cur->next) {
+		if (cur->v == v && cur->type == type) return 1;
+	}
+	return 0;
 }
 
 // Add a new edge to the Map/Graph
 void addLink(Map g, Location start, Location end, Transport type)
 {
-   assert(g != NULL);
-   // don't add edges twice
-   if (!inVList(g->connections[start],end,type)) {
-      g->connections[start] = insertVList(g->connections[start],end,type);
-      g->connections[end] = insertVList(g->connections[end],start,type);
-      g->nE++;
-   }
+	assert(g != NULL);
+	// don't add edges twice
+	if (!inVList(g->connections[start],end,type)) {
+   	g->connections[start] = insertVList(g->connections[start],end,type);
+   	g->connections[end] = insertVList(g->connections[end],start,type);
+   	g->nE++;
+	}
 }
 
 // Display content of Map/Graph
@@ -144,7 +144,7 @@ int numE(Map g, Transport type)
 // Returns number of vertices in path otherwise
 int shortestPath(Map g, Location start, Location end, Location path[], Transport trans[])
 {
-   // TODO: replace the code with a shortest path algorithm
+	// TODO: replace the code with a shortest path algorithm
 
    //Ensure Valid Inputs
    assert(g != NULL);
@@ -213,12 +213,10 @@ int shortestPath(Map g, Location start, Location end, Location path[], Transport
          path[i] = x;
          trans[i] = y;
       }
-      i = i ++;
       path[i] = start;
       trans[i] = 0;
    }
-
-
+   
    // Reverse order of arrays
    int j;
    for (j = 0; j < (i+1)/2; j++){
@@ -229,17 +227,13 @@ int shortestPath(Map g, Location start, Location end, Location path[], Transport
       path[i - j - 1] = x;
       trans[i - j - 1] = y;
    }   
+   
 
    // Free memory
    free(visited);
    free(st);
    free(stTrans);
    dropQueue(q);
-
-   //DEBUG
-   for (j = 0; j < i; j++ ) {
-      printf("Location %d\n", path[j]);
-   }
 
    // Return length of path array
    return i;
