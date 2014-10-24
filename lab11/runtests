@@ -1,0 +1,24 @@
+#!/bin/sh
+
+echo "####################Begin Testing####################"
+for seed in 1234 5467 6789 4654 4321 7893 3261 9054 7432 3322
+do
+    for ins in L A B R S V
+    do
+    	for ord in A R P
+    	do
+    		for size in 500 1000 2000 5000
+    		do
+    			echo ""
+    			echo "Test: ./tlab $size $ord $ins $seed"
+                echo "Size: $size; Data Order: $ord; Insertion Method: $ins; Seed: $seed"
+    			echo "t" | ./tlab $size $ord $ins $seed| grep -v Tree
+                echo "######################Next Size######################"
+    		done
+            echo "#####################Next  Order#####################"
+    	done
+        echo "###################Next  Insertion###################"
+    done
+    echo "######################Next Seed######################"
+done
+echo "#####################End Testing#####################"

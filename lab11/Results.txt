@@ -1,0 +1,33 @@
+Results for Tests on 5000 values
+
+Depth = depth of tree, Cost = average #comparisons per search
+
+---------+---------+---------+---------+---------+---------+---------+
+Insert    Ascending Order     Prefix Order        Random Order
+Method
+             Depth      Cost     Depth      Cost     Depth      Cost
+
+L             5000       3114     13          11       28        15
+
+A             5000       1886     2954        1115     28        16
+ 
+R             2492       951      1774        674      27        15
+
+B             204        61       20          13       23        13
+
+S             4999       11       3977        2        31        11
+
+V              13        11        14         12       15        12
+ 
+Average:    2951.33     1005.67 1458.67   304.50    25.33     13.67
+Max:        5000        3114    3977        1115       31        16
+Min:        13          11      13             2       15        11
+Std. Dev.:  2407.47     1272.33 1727.67   477.83     5.68      1.97
+
+Notes (what the above indicates):
+
+-All in all entering the data in a random order gives the lowest depth and cost most likely because entering the nodes in a random order balances the tree out more than ascending/descending or prefix order. 
+
+- Ascending order gives the highest depth on average as if you insert constantly with a bigger number the tree will never balance, only when the inserting method balances it. The cost then rises as searching the tree requires searching the whole tree (Nearly)
+
+-Prefix order gives different depths but mainly keeps a low cost. This is because prefixed order builds  a balanced tree if inserted normally.

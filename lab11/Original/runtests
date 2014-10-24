@@ -1,0 +1,14 @@
+#!/bin/sh
+
+for ins in L A
+do
+	for ord in A R
+	do
+		for size in 100 200
+		do
+			echo ""
+			echo "Test: ./tlab $size $ord $ins"
+			echo "t" | ./tlab $size $ord $ins | grep -v Tree
+		done
+	done
+done
